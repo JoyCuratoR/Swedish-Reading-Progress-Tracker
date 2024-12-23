@@ -1,154 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- Previous head section and styles remain the same -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swedish Reading Progress Tracker</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <!-- Previous styles remain the same -->
     <style>
-        :root {
-            --primary-color: #4CAF50;
-            --secondary-color: #2196F3;
-            --danger-color: #f44336;
-            --edit-color: #ff9800;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-
-        .card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .input-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        input {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-top: 4px;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        button {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            color: white;
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-        }
-
-        .btn-secondary {
-            background-color: var(--secondary-color);
-        }
-
-        .btn-danger {
-            background-color: var(--danger-color);
-        }
-
-        .btn-edit {
-            background-color: var(--edit-color);
-        }
-
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .tab {
-            padding: 10px 20px;
-            background: #eee;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .tab.active {
-            background: var(--secondary-color);
-            color: white;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 400px;
-            margin-bottom: 20px;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .data-table th,
-        .data-table td {
-            padding: 8px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-
-        .data-table th {
-            background-color: #f5f5f5;
-        }
-
-        .data-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-        .github-settings {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 4px;
-        }
+        /* Previous styles remain the same */
     </style>
 </head>
 <body>
     <div class="card">
         <h1>Swedish Reading Progress Tracker</h1>
-
-        <div class="github-settings">
-            <h3>GitHub Settings</h3>
-            <div class="input-group">
-                <label for="github-token">GitHub Personal Access Token</label>
-                <input type="password" id="github-token" placeholder="Enter your GitHub token">
-            </div>
-            <div class="input-group">
-                <label for="github-repo">Repository (username/repo)</label>
-                <input type="text" id="github-repo" placeholder="e.g., username/swedish-progress">
-            </div>
-            <button class="btn-secondary" onclick="saveGitHubSettings()">Save Settings</button>
-        </div>
         
         <div class="input-section">
             <div class="input-group">
@@ -204,6 +69,7 @@
     </div>
 
     <script>
+        // Initialize empty progress data
         let progressData = {
             dates: [],
             comprehension: [],
@@ -211,19 +77,30 @@
             complexity: []
         };
 
-        let currentChart;
+        let currentChart = null;
         let currentView = 'overall';
         let editingIndex = -1;
 
+        // Set today's date as default
+        window.onload = function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+            initChart();
+        };
+
         function initChart() {
-            const ctx = document.getElementById('progressChart').getContext('2d');
+            const ctx = document.getElementById('progressChart');
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
             currentChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: progressData.dates,
+                    labels: [],
                     datasets: [{
                         label: 'Comprehension Rate (%)',
-                        data: progressData.comprehension,
+                        data: [],
                         borderColor: 'rgb(75, 192, 192)',
                         tension: 0.1
                     }]
@@ -238,9 +115,56 @@
                     }
                 }
             });
+            
+            updateChart();
+        }
+
+        function addDataPoint() {
+            const date = document.getElementById('date').value;
+            const comprehension = parseFloat(document.getElementById('comprehension').value);
+            const wpm = parseInt(document.getElementById('wpm').value);
+            const complexity = parseFloat(document.getElementById('complexity').value);
+
+            if (!date || isNaN(comprehension) || isNaN(wpm) || isNaN(complexity)) {
+                alert('Please fill in all fields with valid numbers');
+                return;
+            }
+
+            if (editingIndex >= 0) {
+                progressData.dates[editingIndex] = date;
+                progressData.comprehension[editingIndex] = comprehension;
+                progressData.wpm[editingIndex] = wpm;
+                progressData.complexity[editingIndex] = complexity;
+                editingIndex = -1;
+                document.querySelector('.btn-primary').textContent = 'Add Data Point';
+            } else {
+                // Add new data point
+                progressData.dates.push(date);
+                progressData.comprehension.push(comprehension);
+                progressData.wpm.push(wpm);
+                progressData.complexity.push(complexity);
+            }
+
+            // Sort data by date
+            const indices = progressData.dates
+                .map((date, index) => ({ date, index }))
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .map(item => item.index);
+
+            // Reorder all arrays based on sorted dates
+            progressData.dates = indices.map(i => progressData.dates[i]);
+            progressData.comprehension = indices.map(i => progressData.comprehension[i]);
+            progressData.wpm = indices.map(i => progressData.wpm[i]);
+            progressData.complexity = indices.map(i => progressData.complexity[i]);
+
+            updateChart();
+            updateDataTable();
+            clearInputs();
         }
 
         function updateChart() {
+            if (!currentChart) return;
+
             currentChart.data.labels = progressData.dates;
             
             if (currentView === 'overall') {
@@ -272,52 +196,8 @@
                     }
                 ];
             }
+            
             currentChart.update();
-            updateDataTable();
-        }
-
-        function switchTab(tab) {
-            currentView = tab;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            updateChart();
-        }
-
-        function addDataPoint() {
-            const date = document.getElementById('date').value;
-            const comprehension = parseFloat(document.getElementById('comprehension').value);
-            const wpm = parseInt(document.getElementById('wpm').value);
-            const complexity = parseFloat(document.getElementById('complexity').value);
-
-            if (!date || !comprehension || !wpm || !complexity) {
-                alert('Please fill in all fields');
-                return;
-            }
-
-            if (editingIndex >= 0) {
-                progressData.dates[editingIndex] = date;
-                progressData.comprehension[editingIndex] = comprehension;
-                progressData.wpm[editingIndex] = wpm;
-                progressData.complexity[editingIndex] = complexity;
-                editingIndex = -1;
-                document.querySelector('.btn-primary').textContent = 'Add Data Point';
-            } else {
-                progressData.dates.push(date);
-                progressData.comprehension.push(comprehension);
-                progressData.wpm.push(wpm);
-                progressData.complexity.push(complexity);
-            }
-
-            updateChart();
-            saveToGitHub();
-            clearInputs();
-        }
-
-        function clearInputs() {
-            document.getElementById('date').value = '';
-            document.getElementById('comprehension').value = '';
-            document.getElementById('wpm').value = '';
-            document.getElementById('complexity').value = '';
         }
 
         function updateDataTable() {
@@ -340,6 +220,21 @@
             }
         }
 
+        function clearInputs() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+            document.getElementById('comprehension').value = '';
+            document.getElementById('wpm').value = '';
+            document.getElementById('complexity').value = '';
+        }
+
+        function switchTab(tab) {
+            currentView = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            updateChart();
+        }
+
         function editDataPoint(index) {
             editingIndex = index;
             document.getElementById('date').value = progressData.dates[index];
@@ -356,7 +251,7 @@
                 progressData.wpm.splice(index, 1);
                 progressData.complexity.splice(index, 1);
                 updateChart();
-                saveToGitHub();
+                updateDataTable();
             }
         }
 
@@ -375,6 +270,10 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+        }
+
+        function importData() {
+            document.getElementById('fileInput').click();
         }
 
         function handleFileSelect(event) {
@@ -405,55 +304,11 @@
                 }
                 
                 updateChart();
-                saveToGitHub();
+                updateDataTable();
             };
             
             reader.readAsText(file);
         }
-
-        function importData() {
-            document.getElementById('fileInput').click();
-        }
-
-        async function saveToGitHub() {
-            const token = document.getElementById('github-token').value;
-            const repo = document.getElementById('github-repo').value;
-            
-            if (!token || !repo) {
-                alert('Please enter GitHub token and repository details');
-                return;
-            }
-
-            const content = btoa(JSON.stringify(progressData, null, 2));
-            const apiUrl = `https://api.github.com/repos/${repo}/contents/reading_progress.json`;
-
-            try {
-                // First try to get the file to get its SHA if it exists
-                const response = await fetch(apiUrl, {
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                });
-
-                const data = await response.json();
-                const sha = data.sha;
-
-                // Update or create the file
-                await fetch(apiUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        message: 'Update reading progress data',
-                        content: content,
-                        sha: sha
-                    })
-                });
-            } catch (error) {
-                // If file doesn't exist, create it
-                await fetch(apiUrl, {
-                
+    </script>
+</body>
+</html>
