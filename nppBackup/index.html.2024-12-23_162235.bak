@@ -238,25 +238,8 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <h1>Swedish Reading Progress Tracker</h1>
-
-            <div class="github-settings">
-                <h3>Data Storage Settings</h3>
-                <div class="input-group">
-                    <label for="github-token">GitHub Personal Access Token</label>
-                    <input type="password" id="github-token" placeholder="Enter your GitHub token">
-                </div>
-                <div class="input-group">
-                    <label for="github-repo">Repository (username/repo)</label>
-                    <input type="text" id="github-repo" placeholder="e.g., username/swedish-progress">
-                </div>
-                <button class="btn-secondary" onclick="saveGitHubSettings()">Save Settings</button>
-            </div>
-
-            <div class="alert alert-success" id="success-alert"></div>
-            <div class="alert alert-error" id="error-alert"></div>
+    <div class="card">
+        <h1>Swedish Reading Progress Tracker</h1>
         
         <div class="input-section">
             <div class="input-group">
@@ -361,81 +344,6 @@
             
             updateChart();
         }
-		async function saveGitHubSettings() {
-            const token = document.getElementById('github-token').value;
-            const repo = document.getElementById('github-repo').value;
-            
-            if (!token || !repo) {
-                showAlert('Please enter both GitHub token and repository details', 'error');
-                return;
-            }
-
-            localStorage.setItem('github-token', token);
-            localStorage.setItem('github-repo', repo);
-            
-            try {
-                await saveToGitHub();
-                showAlert('Settings saved and data synced successfully!', 'success');
-            } catch (error) {
-                showAlert('Error saving to GitHub: ' + error.message, 'error');
-            }
-        }
-
-        async function saveToGitHub() {
-            const token = localStorage.getItem('github-token');
-            const repo = localStorage.getItem('github-repo');
-            
-            if (!token || !repo) {
-                throw new Error('GitHub settings not configured');
-            }
-
-            const content = btoa(JSON.stringify(progressData, null, 2));
-            const apiUrl = `https://api.github.com/repos/${repo}/contents/reading_progress.json`;
-
-            try {
-                // First try to get the file to get its SHA if it exists
-                const response = await fetch(apiUrl, {
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                });
-
-                if (response.status === 200) {
-                    const data = await response.json();
-                    const sha = data.sha;
-
-                    // Update existing file
-                    await fetch(apiUrl, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `token ${token}`,
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            message: 'Update reading progress data',
-                            content: content,
-                            sha: sha
-                        })
-                    });
-                } else {
-                    // Create new file
-                    await fetch(apiUrl, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `token ${token}`,
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            message: 'Create reading progress data',
-                            content: content
-                        })
-                    });
-                }
-            } catch (error) {
-                throw new Error('Failed to save to GitHub: ' + error.message);
-            }
-        }
 
         function addDataPoint() {
             const date = document.getElementById('date').value;
@@ -462,29 +370,6 @@
                 progressData.wpm.push(wpm);
                 progressData.complexity.push(complexity);
             }
-			saveToGitHub().catch(error => showAlert(error.message, 'error'));
-        }
-		
-		// Validation
-            if (!date || isNaN(comprehension) || isNaN(wpm) || isNaN(complexity)) {
-                showAlert('Please fill in all fields with valid numbers', 'error');
-                return;
-            }
-
-            if (comprehension > 100) {
-                showAlert('Comprehension rate cannot exceed 100%', 'error');
-                return;
-            }
-
-            if (complexity > 10) {
-                showAlert('Text complexity cannot exceed 10', 'error');
-                return;
-            }
-
-            if (wpm < 0 || comprehension < 0 || complexity < 0) {
-                showAlert('Values cannot be negative', 'error');
-                return;
-            }
 
             // Sort data by date
             const indices = progressData.dates
@@ -501,21 +386,6 @@
             updateChart();
             updateDataTable();
             clearInputs();
-        }
-		
-		function showAlert(message, type) {
-            const successAlert = document.getElementById('success-alert');
-            const errorAlert = document.getElementById('error-alert');
-            
-            if (type === 'success') {
-                successAlert.textContent = message;
-                successAlert.style.display = 'block';
-                setTimeout(() => successAlert.style.display = 'none', 3000);
-            } else {
-                errorAlert.textContent = message;
-                errorAlert.style.display = 'block';
-                setTimeout(() => errorAlert.style.display = 'none', 3000);
-            }
         }
 
         function updateChart() {
