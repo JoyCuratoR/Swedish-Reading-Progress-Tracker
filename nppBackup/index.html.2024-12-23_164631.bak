@@ -238,28 +238,26 @@
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Swedish Reading Progress Tracker</h1>
+    <div class="container">
+        <div class="card">
+            <h1>Swedish Reading Progress Tracker</h1>
 
-        <!-- GitHub Settings Section -->
-        <div class="github-settings">
-            <h3>Data Storage Settings</h3>
-            <div class="input-group">
-                <label for="github-token">GitHub Personal Access Token</label>
-                <input type="password" id="github-token" placeholder="Enter your GitHub token">
+            <div class="github-settings">
+                <h3>Data Storage Settings</h3>
+                <div class="input-group">
+                    <label for="github-token">GitHub Personal Access Token</label>
+                    <input type="password" id="github-token" placeholder="Enter your GitHub token">
+                </div>
+                <div class="input-group">
+                    <label for="github-repo">Repository (username/repo)</label>
+                    <input type="text" id="github-repo" placeholder="e.g., username/swedish-progress">
+                </div>
+                <button class="btn-secondary" onclick="saveGitHubSettings()">Save Settings</button>
             </div>
-            <div class="input-group">
-                <label for="github-repo">Repository (username/repo)</label>
-                <input type="text" id="github-repo" placeholder="e.g., username/swedish-progress">
-            </div>
-            <button class="btn-secondary" onclick="saveGitHubSettings()">Save Settings</button>
-        </div>
 
-        <!-- Alert Messages -->
-        <div class="alert alert-success" id="success-alert"></div>
-        <div class="alert alert-error" id="error-alert"></div>
+            <div class="alert alert-success" id="success-alert"></div>
+            <div class="alert alert-error" id="error-alert"></div>
         
-        <!-- Input Section -->
         <div class="input-section">
             <div class="input-group">
                 <label for="comprehension">Comprehension Rate (%)</label>
@@ -314,52 +312,56 @@
     </div>
 
     <script>
-        // Initialize data and chart variables
+        // Initialize empty progress data
         let progressData = {
             dates: [],
             comprehension: [],
             wpm: [],
             complexity: []
         };
+
         let currentChart = null;
         let currentView = 'overall';
         let editingIndex = -1;
 
-        // Initialize on page load
+        // Set today's date as default
         window.onload = function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('date').value = today;
-            
-            // Load GitHub settings if they exist
-            const token = localStorage.getItem('github-token');
-            const repo = localStorage.getItem('github-repo');
-            if (token && repo) {
-                document.getElementById('github-token').value = token;
-                document.getElementById('github-repo').value = repo;
-                loadFromGitHub().catch(error => showAlert(error.message, 'error'));
-            }
-            
             initChart();
         };
 
-        // Alert handling
-        function showAlert(message, type) {
-            const successAlert = document.getElementById('success-alert');
-            const errorAlert = document.getElementById('error-alert');
-            
-            if (type === 'success') {
-                successAlert.textContent = message;
-                successAlert.style.display = 'block';
-                setTimeout(() => successAlert.style.display = 'none', 3000);
-            } else {
-                errorAlert.textContent = message;
-                errorAlert.style.display = 'block';
-                setTimeout(() => errorAlert.style.display = 'none', 3000);
+        function initChart() {
+            const ctx = document.getElementById('progressChart');
+            if (currentChart) {
+                currentChart.destroy();
             }
+            
+            currentChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Comprehension Rate (%)',
+                        data: [],
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            updateChart();
         }
-
-        // GitHub Integration
-        async function saveGitHubSettings() {
+		async function saveGitHubSettings() {
             const token = document.getElementById('github-token').value;
             const repo = document.getElementById('github-repo').value;
             
@@ -391,7 +393,7 @@
             const apiUrl = `https://api.github.com/repos/${repo}/contents/reading_progress.json`;
 
             try {
-                // First try to get the file
+                // First try to get the file to get its SHA if it exists
                 const response = await fetch(apiUrl, {
                     headers: {
                         'Authorization': `token ${token}`,
@@ -401,6 +403,8 @@
 
                 if (response.status === 200) {
                     const data = await response.json();
+                    const sha = data.sha;
+
                     // Update existing file
                     await fetch(apiUrl, {
                         method: 'PUT',
@@ -411,7 +415,7 @@
                         body: JSON.stringify({
                             message: 'Update reading progress data',
                             content: content,
-                            sha: data.sha
+                            sha: sha
                         })
                     });
                 } else {
@@ -433,123 +437,35 @@
             }
         }
 
-        async function loadFromGitHub() {
-            const token = localStorage.getItem('github-token');
-            const repo = localStorage.getItem('github-repo');
-            
-            if (!token || !repo) return;
-
-            const apiUrl = `https://api.github.com/repos/${repo}/contents/reading_progress.json`;
-            
-            try {
-                const response = await fetch(apiUrl, {
-                    headers: {
-                        'Authorization': `token ${token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                });
-
-                if (response.status === 200) {
-                    const data = await response.json();
-                    const content = JSON.parse(atob(data.content));
-                    progressData = content;
-                    updateChart();
-                    updateDataTable();
-                }
-            } catch (error) {
-                throw new Error('Failed to load from GitHub: ' + error.message);
-            }
-        }
-
-        // Chart handling
-        function initChart() {
-            const ctx = document.getElementById('progressChart');
-            if (currentChart) {
-                currentChart.destroy();
-            }
-            
-            currentChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Comprehension Rate (%)',
-                        data: [],
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-            
-            updateChart();
-        }
-
-        function updateChart() {
-            if (!currentChart) return;
-
-            // Sort data by date before updating
-            const indices = progressData.dates
-                .map((date, index) => ({ date, index }))
-                .sort((a, b) => new Date(a.date) - new Date(b.date))
-                .map(item => item.index);
-
-            const sortedDates = indices.map(i => progressData.dates[i]);
-            const sortedComprehension = indices.map(i => progressData.comprehension[i]);
-            const sortedWPM = indices.map(i => progressData.wpm[i]);
-            const sortedComplexity = indices.map(i => progressData.complexity[i]);
-
-            currentChart.data.labels = sortedDates;
-            
-            if (currentView === 'overall') {
-                currentChart.data.datasets = [{
-                    label: 'Comprehension Rate (%)',
-                    data: sortedComprehension,
-                    borderColor: 'rgb(75, 192, 192)',
-                    tension: 0.1
-                }];
-            } else {
-                currentChart.data.datasets = [
-                    {
-                        label: 'Comprehension Rate (%)',
-                        data: sortedComprehension,
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1
-                    },
-                    {
-                        label: 'Reading Speed (WPM)',
-                        data: sortedWPM,
-                        borderColor: 'rgb(255, 99, 132)',
-                        tension: 0.1
-                    },
-                    {
-                        label: 'Text Complexity',
-                        data: sortedComplexity,
-                        borderColor: 'rgb(255, 205, 86)',
-                        tension: 0.1
-                    }
-                ];
-            }
-            
-            currentChart.update();
-        }
-
-        // Data point handling
         function addDataPoint() {
             const date = document.getElementById('date').value;
             const comprehension = parseFloat(document.getElementById('comprehension').value);
             const wpm = parseInt(document.getElementById('wpm').value);
             const complexity = parseFloat(document.getElementById('complexity').value);
 
-            // Validation
+            if (!date || isNaN(comprehension) || isNaN(wpm) || isNaN(complexity)) {
+                alert('Please fill in all fields with valid numbers');
+                return;
+            }
+
+            if (editingIndex >= 0) {
+                progressData.dates[editingIndex] = date;
+                progressData.comprehension[editingIndex] = comprehension;
+                progressData.wpm[editingIndex] = wpm;
+                progressData.complexity[editingIndex] = complexity;
+                editingIndex = -1;
+                document.querySelector('.btn-primary').textContent = 'Add Data Point';
+            } else {
+                // Add new data point
+                progressData.dates.push(date);
+                progressData.comprehension.push(comprehension);
+                progressData.wpm.push(wpm);
+                progressData.complexity.push(complexity);
+            }
+			saveToGitHub().catch(error => showAlert(error.message, 'error'));
+        }
+		
+		// Validation
             if (!date || isNaN(comprehension) || isNaN(wpm) || isNaN(complexity)) {
                 showAlert('Please fill in all fields with valid numbers', 'error');
                 return;
@@ -570,24 +486,94 @@
                 return;
             }
 
-            if (editingIndex >= 0) {
-                progressData.dates[editingIndex] = date;
-                progressData.comprehension[editingIndex] = comprehension;
-                progressData.wpm[editingIndex] = wpm;
-                progressData.complexity[editingIndex] = complexity;
-                editingIndex = -1;
-                document.querySelector('.btn-primary').textContent = 'Add Data Point';
-            } else {
-                progressData.dates.push(date);
-                progressData.comprehension.push(comprehension);
-                progressData.wpm.push(wpm);
-                progressData.complexity.push(complexity);
-            }
+            // Sort data by date
+            const indices = progressData.dates
+                .map((date, index) => ({ date, index }))
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .map(item => item.index);
+
+            // Reorder all arrays based on sorted dates
+            progressData.dates = indices.map(i => progressData.dates[i]);
+            progressData.comprehension = indices.map(i => progressData.comprehension[i]);
+            progressData.wpm = indices.map(i => progressData.wpm[i]);
+            progressData.complexity = indices.map(i => progressData.complexity[i]);
 
             updateChart();
             updateDataTable();
             clearInputs();
-            saveToGitHub().catch(error => showAlert(error.message, 'error'));
+        }
+		
+		function showAlert(message, type) {
+            const successAlert = document.getElementById('success-alert');
+            const errorAlert = document.getElementById('error-alert');
+            
+            if (type === 'success') {
+                successAlert.textContent = message;
+                successAlert.style.display = 'block';
+                setTimeout(() => successAlert.style.display = 'none', 3000);
+            } else {
+                errorAlert.textContent = message;
+                errorAlert.style.display = 'block';
+                setTimeout(() => errorAlert.style.display = 'none', 3000);
+            }
+        }
+
+        function updateChart() {
+            if (!currentChart) return;
+
+            currentChart.data.labels = progressData.dates;
+            
+            if (currentView === 'overall') {
+                currentChart.data.datasets = [{
+                    label: 'Comprehension Rate (%)',
+                    data: progressData.comprehension,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }];
+            } else {
+                currentChart.data.datasets = [
+                    {
+                        label: 'Comprehension Rate (%)',
+                        data: progressData.comprehension,
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Reading Speed (WPM)',
+                        data: progressData.wpm,
+                        borderColor: 'rgb(255, 99, 132)',
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Text Complexity',
+                        data: progressData.complexity,
+                        borderColor: 'rgb(255, 205, 86)',
+                        tension: 0.1
+                    }
+                ];
+            }
+            
+            currentChart.update();
+        }
+
+        function updateDataTable() {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+            
+            for (let i = 0; i < progressData.dates.length; i++) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${progressData.dates[i]}</td>
+                    <td>${progressData.comprehension[i]}%</td>
+                    <td>${progressData.wpm[i]}</td>
+                    <td>${progressData.complexity[i]}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editDataPoint(${i})">Edit</button>
+                        <button class="btn-danger" onclick="deleteDataPoint(${i})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
         }
 
         function clearInputs() {
@@ -597,7 +583,6 @@
             document.getElementById('wpm').value = '';
             document.getElementById('complexity').value = '';
         }
-
 
         function switchTab(tab) {
             currentView = tab;
