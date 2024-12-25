@@ -654,72 +654,13 @@
             updateChart();
         }
 
-        async function editDataPoint(index) {
+        function editDataPoint(index) {
             editingIndex = index;
             document.getElementById('date').value = progressData.dates[index];
             document.getElementById('comprehension').value = progressData.comprehension[index];
             document.getElementById('wpm').value = progressData.wpm[index];
             document.getElementById('complexity').value = progressData.complexity[index];
             document.querySelector('.btn-primary').textContent = 'Update Data Point';
-            
-            // Scroll to the input section
-            document.querySelector('.input-section').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // Modified addDataPoint function to handle updates
-        async function addDataPoint() {
-            const date = document.getElementById('date').value;
-            const comprehension = parseFloat(document.getElementById('comprehension').value);
-            const wpm = parseInt(document.getElementById('wpm').value);
-            const complexity = parseFloat(document.getElementById('complexity').value);
-
-            // Validation
-            if (!date || isNaN(comprehension) || isNaN(wpm) || isNaN(complexity)) {
-                showAlert('Please fill in all fields with valid numbers', 'error');
-                return;
-            }
-
-            if (comprehension > 100) {
-                showAlert('Comprehension rate cannot exceed 100%', 'error');
-                return;
-            }
-
-            if (complexity > 10) {
-                showAlert('Text complexity cannot exceed 10', 'error');
-                return;
-            }
-
-            if (wpm < 0 || comprehension < 0 || complexity < 0) {
-                showAlert('Values cannot be negative', 'error');
-                return;
-            }
-
-            try {
-                if (editingIndex >= 0) {
-                    // Update existing data point
-                    progressData.dates[editingIndex] = date;
-                    progressData.comprehension[editingIndex] = comprehension;
-                    progressData.wpm[editingIndex] = wpm;
-                    progressData.complexity[editingIndex] = complexity;
-                    editingIndex = -1;
-                    document.querySelector('.btn-primary').textContent = 'Add Data Point';
-                    showAlert('Data point updated successfully!', 'success');
-                } else {
-                    // Add new data point
-                    progressData.dates.push(date);
-                    progressData.comprehension.push(comprehension);
-                    progressData.wpm.push(wpm);
-                    progressData.complexity.push(complexity);
-                    showAlert('New data point added successfully!', 'success');
-                }
-
-                await saveToGitHub();
-                updateChart();
-                updateDataTable();
-                clearInputs();
-            } catch (error) {
-                showAlert('Error saving data: ' + error.message, 'error');
-            }
         }
 
         function deleteDataPoint(index) {
