@@ -325,24 +325,18 @@
         let currentView = 'overall';
         let editingIndex = -1;
 
-        // Modified window.onload function
-        window.onload = async function() {
+        // Initialize on page load
+        window.onload = function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('date').value = today;
             
-             // Load GitHub settings if they exist
+            // Load GitHub settings if they exist
             const token = localStorage.getItem('github-token');
             const repo = localStorage.getItem('github-repo');
             if (token && repo) {
                 document.getElementById('github-token').value = token;
                 document.getElementById('github-repo').value = repo;
-                try {
-                    showAlert('Loading data from GitHub...', 'success');
-                    await loadFromGitHub();
-                    showAlert('Data loaded successfully!', 'success');
-                } catch (error) {
-                    showAlert('Error loading data: ' + error.message, 'error');
-                }
+                loadFromGitHub().catch(error => showAlert(error.message, 'error'));
             }
             
             initChart();
@@ -385,7 +379,6 @@
             }
         }
 
-        // Modified saveToGitHub function with better error handling
         async function saveToGitHub() {
             const token = localStorage.getItem('github-token');
             const repo = localStorage.getItem('github-repo');
@@ -406,11 +399,10 @@
                     }
                 });
 
-                let updateResponse;
                 if (response.status === 200) {
-                    // Update existing file
                     const data = await response.json();
-                    updateResponse = await fetch(apiUrl, {
+                    // Update existing file
+                    await fetch(apiUrl, {
                         method: 'PUT',
                         headers: {
                             'Authorization': `token ${token}`,
@@ -422,9 +414,9 @@
                             sha: data.sha
                         })
                     });
-                } else if (response.status === 404) {
+                } else {
                     // Create new file
-                    updateResponse = await fetch(apiUrl, {
+                    await fetch(apiUrl, {
                         method: 'PUT',
                         headers: {
                             'Authorization': `token ${token}`,
@@ -435,13 +427,6 @@
                             content: content
                         })
                     });
-                } else {
-                    throw new Error(`GitHub API returned status ${response.status}`);
-                }
-
-                if (!updateResponse.ok) {
-                    const errorData = await updateResponse.json();
-                    throw new Error(errorData.message || 'Failed to save to GitHub');
                 }
             } catch (error) {
                 throw new Error('Failed to save to GitHub: ' + error.message);
