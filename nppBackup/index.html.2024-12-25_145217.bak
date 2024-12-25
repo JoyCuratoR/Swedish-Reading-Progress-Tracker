@@ -340,7 +340,7 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('date').value = today;
             
-            // Load GitHub settings if they exist
+             // Load GitHub settings if they exist
             const token = localStorage.getItem('github-token');
             const repo = localStorage.getItem('github-repo');
             if (token && repo) {
@@ -351,14 +351,6 @@
                     await loadFromGitHub();
                     showAlert('Data loaded successfully!', 'success');
                 } catch (error) {
-                    // If loading fails, ensure progressData is properly initialized
-                    progressData = {
-                        dates: [],
-                        comprehension: [],
-                        wpm: [],
-                        complexity: [],
-                        err: []
-                    };
                     showAlert('Error loading data: ' + error.message, 'error');
                 }
             }
@@ -485,23 +477,7 @@
                 if (response.status === 200) {
                     const data = await response.json();
                     const content = JSON.parse(atob(data.content));
-                    
-                    // Ensure all required arrays exist
-                    progressData = {
-                        dates: content.dates || [],
-                        comprehension: content.comprehension || [],
-                        wpm: content.wpm || [],
-                        complexity: content.complexity || [],
-                        err: content.err || []
-                    };
-
-                    // Calculate ERR for old data that might not have it
-                    if (!content.err) {
-                        progressData.err = progressData.wpm.map((wpm, index) => 
-                            Math.round((wpm * progressData.comprehension[index]) / 100)
-                        );
-                    }
-
+                    progressData = content;
                     updateChart();
                     updateDataTable();
                 }
@@ -509,7 +485,6 @@
                 throw new Error('Failed to load from GitHub: ' + error.message);
             }
         }
-
 
         // Chart handling
         function initChart() {
