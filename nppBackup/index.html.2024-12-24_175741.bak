@@ -509,20 +509,12 @@
 
             currentChart.data.labels = sortedDates;
             
-            const commonOptions = {
-                tension: 0.1,
-                pointRadius: 6, // Increased point size
-                pointHoverRadius: 8, // Increased hover point size
-                pointBackgroundColor: 'white', // White center
-                pointBorderWidth: 2, // Increased border width
-            };
-            
             if (currentView === 'overall') {
                 currentChart.data.datasets = [{
                     label: 'Comprehension Rate (%)',
                     data: sortedComprehension,
                     borderColor: 'rgb(75, 192, 192)',
-                    ...commonOptions
+                    tension: 0.1
                 }];
             } else {
                 currentChart.data.datasets = [
@@ -530,51 +522,26 @@
                         label: 'Comprehension Rate (%)',
                         data: sortedComprehension,
                         borderColor: 'rgb(75, 192, 192)',
-                        ...commonOptions
+                        tension: 0.1
                     },
                     {
                         label: 'Reading Speed (WPM)',
                         data: sortedWPM,
                         borderColor: 'rgb(255, 99, 132)',
-                        ...commonOptions
+                        tension: 0.1
                     },
                     {
                         label: 'Text Complexity',
                         data: sortedComplexity,
                         borderColor: 'rgb(255, 205, 86)',
-                        ...commonOptions
+                        tension: 0.1
                     }
                 ];
             }
             
             currentChart.update();
         }
-		
-		function updateDataTable() {
-            const tableBody = document.getElementById('dataTableBody');
-            tableBody.innerHTML = '';
-            
-            // Create array of indices sorted by date (most recent first)
-            const indices = progressData.dates
-                .map((date, index) => ({ date, index }))
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .map(item => item.index);
-            
-            indices.forEach(function(i) {
-                const row = document.createElement('tr');
-                row.innerHTML = 
-                    '<td>' + progressData.dates[i] + '</td>' +
-                    '<td>' + progressData.comprehension[i] + '%</td>' +
-                    '<td>' + progressData.wpm[i] + '</td>' +
-                    '<td>' + progressData.complexity[i] + '</td>' +
-                    '<td>' +
-                        '<button class="btn-edit" onclick="editDataPoint(' + i + ')">Edit</button> ' +
-                        '<button class="btn-danger" onclick="deleteDataPoint(' + i + ')">Delete</button>' +
-                    '</td>';
-                tableBody.appendChild(row);
-            });
-        }
-		
+
         // Data point handling
         function addDataPoint() {
             const date = document.getElementById('date').value;
@@ -713,7 +680,6 @@
             
             reader.readAsText(file);
         }
-		
     </script>
 </body>
 </html>
