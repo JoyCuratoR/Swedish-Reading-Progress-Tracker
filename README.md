@@ -16,7 +16,15 @@
 - Click "Personal access tokens" → "Tokens (classic)"
 - Generate new token → "Generate new token (classic)"
 - Give it a name like "Reading Progress Tracker"
-- Under "Select scopes", check the box next to "repo" (this gives full control of repositories)
+- Under "Select scopes":
+  For a public repository:
+
+  - Just select "public_repo" instead of "repo"
+  - This gives access only to public repositories, which is safer
+
+  For a private repository:
+
+  - You would need "repo" scope, but you could create a new GitHub account specifically for this project if you're concerned about security
 - Click "Generate token" and copy the token immediately (you won't see it again)
 
 2. For the repository:
