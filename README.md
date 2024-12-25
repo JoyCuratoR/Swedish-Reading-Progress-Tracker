@@ -17,12 +17,13 @@
 - Generate new token → "Generate new token (classic)"
 - Give it a name like "Reading Progress Tracker"
 - Under "Select scopes":
-  For a public repository:
+
+  <i>For a public repository:</i>
 
   - Just select "public_repo" instead of "repo"
   - This gives access only to public repositories, which is safer
 
-  For a private repository:
+  <i>For a private repository:</i>
 
   - You would need "repo" scope, but you could create a new GitHub account specifically for this project if you're concerned about security
 - Click "Generate token" and copy the token immediately (you won't see it again)
