@@ -3,6 +3,9 @@
 - Visualize your data with overall progress of Comprehension rate and a detailed look at all three metrics
 - Easily export or import a set of data using .csv file extension
 - And if you accidently make a mistake entering in your data, you can either edit or delete the data point
+- Save your dataset in your own GitHub repository using a Personal Access Token and GitHub Integration
+
+<br></br>
 
 <b>Let's break down how to set this up properly in steps:</b>
 1. First, let's create a Personal Access Token (PAT) with repo scope:
