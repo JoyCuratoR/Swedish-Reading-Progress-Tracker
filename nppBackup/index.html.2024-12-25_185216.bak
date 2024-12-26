@@ -167,33 +167,24 @@
         }
 
         .data-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        margin-top: 1.5rem;
-        font-size: 0.875rem; /* Slightly smaller font size for better fit */
-    }
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1.5rem;
+        }
 
         .data-table th,
-    .data-table td {
-        padding: 0.75rem; /* Reduced padding */
-        border-bottom: 1px solid var(--border-color);
-        text-align: left;
-        white-space: nowrap; /* Prevent text wrapping */
-    }
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
 
-    .data-table th {
-        background-color: var(--background);
-        font-weight: 500;
-        color: var(--text-secondary);
-    }
-
-    /* Add horizontal scroll for smaller screens */
-    .data-table-container {
-        overflow-x: auto;
-        margin: 0 -1rem; /* Negative margin to align with container */
-        padding: 0 1rem; /* Add padding back to maintain spacing */
-    }
+        .data-table th {
+            background-color: var(--background);
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
 
         .data-table tr:last-child td {
             border-bottom: none;
@@ -321,7 +312,6 @@
                         <th>Date</th>
                         <th>Comprehension</th>
                         <th>Reading Speed</th>
-						<th>EER</th>
                         <th>Complexity</th>
                         <th>Actions</th>
                     </tr>
@@ -618,30 +608,30 @@
         }
 		
 		// Modified updateDataTable function
-		function updateDataTable() {
-        const tableBody = document.getElementById('dataTableBody');
-        tableBody.innerHTML = '';
+        function updateDataTable() {
+            const tableBody = document.getElementById('dataTableBody');
+            tableBody.innerHTML = '';
             
             const indices = progressData.dates
-            .map((date, index) => ({ date, index }))
-            .sort((a, b) => new Date(b.date) - new Date(a.date))
-            .map(item => item.index);
-        
-        indices.forEach(function(i) {
-            const row = document.createElement('tr');
-            row.innerHTML = 
-                '<td>' + progressData.dates[i] + '</td>' +
-                '<td>' + progressData.comprehension[i] + '%</td>' +
-                '<td>' + progressData.wpm[i] + '</td>' +
-                '<td>' + progressData.err[i] + '</td>' +
-                '<td>' + progressData.complexity[i] + '</td>' +
-                '<td>' +
-                    '<button class="btn-edit" onclick="editDataPoint(' + i + ')">Edit</button> ' +
-                    '<button class="btn-danger" onclick="deleteDataPoint(' + i + ')">Delete</button>' +
-                '</td>';
-            tableBody.appendChild(row);
-        });
-    }
+                .map((date, index) => ({ date, index }))
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .map(item => item.index);
+            
+            indices.forEach(function(i) {
+                const row = document.createElement('tr');
+                row.innerHTML = 
+                    '<td>' + progressData.dates[i] + '</td>' +
+                    '<td>' + progressData.comprehension[i] + '%</td>' +
+                    '<td>' + progressData.wpm[i] + '</td>' +
+                    '<td>' + progressData.err[i] + '</td>' +
+                    '<td>' + progressData.complexity[i] + '</td>' +
+                    '<td>' +
+                        '<button class="btn-edit" onclick="editDataPoint(' + i + ')">Edit</button> ' +
+                        '<button class="btn-danger" onclick="deleteDataPoint(' + i + ')">Delete</button>' +
+                    '</td>';
+                tableBody.appendChild(row);
+            });
+        }
 		
         // Data point handling
         function addDataPoint() {
