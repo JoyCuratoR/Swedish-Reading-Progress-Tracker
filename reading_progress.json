@@ -1,18 +1,9 @@
 {
-  "dates": [
-    "2024-12-24"
-  ],
-  "comprehension": [
-    100
-  ],
-  "wpm": [
-    87
-  ],
-  "complexity": [
-    1
-  ],
+  "dates": [],
+  "comprehension": [],
+  "wpm": [],
+  "complexity": [],
   "err": [
-    87,
     73
   ]
 }
