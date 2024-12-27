@@ -277,11 +277,11 @@
         <div class="input-section">
             <div class="input-group">
                 <label for="comprehension">Comprehension Rate (%)</label>
-                <input type="number" id="comprehension" placeholder="Comprehension percentage" oninput="calculateERR()">
+                <input type="number" id="comprehension" placeholder="Comprehension percentage" oninput="calculateMetrics()">
             </div>
             <div class="input-group">
                 <label for="wpm">Reading Speed (WPM)</label>
-                <input type="number" id="wpm" placeholder="Words per minute" oninput="calculateERR()">
+                <input type="number" id="wpm" placeholder="Words per minute" oninput="calculateMetrics()">
             </div>
             <div class="input-group">
                 <label for="err">Effective Reading Rate (ERR)</label>
@@ -290,6 +290,10 @@
             <div class="input-group">
                 <label for="complexity">Text Complexity (1-10)</label>
                 <input type="number" id="complexity" step="0.1" placeholder="Complexity level">
+            </div>
+            <div class="input-group">
+                <label for="progress">Daily Progress (%)</label>
+                <input type="number" id="progress" placeholder="Auto-calculated" class="auto-calculated" disabled>
             </div>
             <div class="input-group">
                 <label for="date">Date</label>
@@ -321,13 +325,13 @@
                         <th>Date</th>
                         <th>Comprehension</th>
                         <th>Reading Speed</th>
-						<th>EER</th>
+                        <th>ERR</th>
                         <th>Complexity</th>
+                        <th>Progress</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody id="dataTableBody">
-                </tbody>
+                <tbody id="dataTableBody"></tbody>
             </table>
         </div>
     </div>
@@ -339,16 +343,20 @@
             comprehension: [],
             wpm: [],
             complexity: [],
-            err: []
+            err: [],
+            progress: []
         };
         let currentChart = null;
         let currentView = 'overall';
         let editingIndex = -1;
 
         // Modified window.onload function
-        window.onload = async function() {
+        window.onload = function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('date').value = today;
+            initChart();
+            loadStoredData();
+        };
             
             // Load GitHub settings if they exist
             const token = localStorage.getItem('github-token');
@@ -524,18 +532,14 @@
         // Chart handling
         function initChart() {
             const ctx = document.getElementById('progressChart');
-            if (currentChart) {
-                currentChart.destroy();
-            }
-            
             currentChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: [],
                     datasets: [{
-                        label: 'Comprehension Rate (%)',
+                        label: 'Daily Progress (%)',
                         data: [],
-                        borderColor: 'rgb(75, 192, 192)',
+                        borderColor: 'rgb(147, 51, 234)',
                         tension: 0.1
                     }]
                 },
@@ -549,71 +553,58 @@
                     }
                 }
             });
-            
-            updateChart();
         }
 
         // Modified updateChart function
         function updateChart() {
             if (!currentChart) return;
 
-            const indices = progressData.dates
+            const sortedIndices = progressData.dates
                 .map((date, index) => ({ date, index }))
                 .sort((a, b) => new Date(a.date) - new Date(b.date))
                 .map(item => item.index);
 
-            const sortedDates = indices.map(i => progressData.dates[i]);
-            const sortedComprehension = indices.map(i => progressData.comprehension[i]);
-            const sortedWPM = indices.map(i => progressData.wpm[i]);
-            const sortedComplexity = indices.map(i => progressData.complexity[i]);
-            const sortedERR = indices.map(i => progressData.err[i]);
+            const sortedDates = sortedIndices.map(i => progressData.dates[i]);
+            const datasets = [];
+
+            if (currentView === 'overall') {
+                datasets.push({
+                    label: 'Daily Progress (%)',
+                    data: sortedIndices.map(i => progressData.progress[i]),
+                    borderColor: 'rgb(147, 51, 234)',
+                    tension: 0.1
+                });
+            } else {
+                datasets.push(
+                    {
+                        label: 'ERR',
+                        data: sortedIndices.map(i => progressData.err[i]),
+                        borderColor: 'rgb(147, 51, 234)',
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Comprehension (%)',
+                        data: sortedIndices.map(i => progressData.comprehension[i]),
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    },
+                    {
+                        label: 'WPM',
+                        data: sortedIndices.map(i => progressData.wpm[i]),
+                        borderColor: 'rgb(255, 99, 132)',
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Complexity',
+                        data: sortedIndices.map(i => progressData.complexity[i]),
+                        borderColor: 'rgb(255, 205, 86)',
+                        tension: 0.1
+                    }
+                );
+            }
 
             currentChart.data.labels = sortedDates;
-            
-            const commonOptions = {
-                tension: 0.1,
-                pointRadius: 6,
-                pointHoverRadius: 8,
-                pointBackgroundColor: 'white',
-                pointBorderWidth: 2,
-            };
-            
-            if (currentView === 'overall') {
-                currentChart.data.datasets = [{
-                    label: 'Effective Reading Rate (ERR)',
-                    data: sortedERR,
-                    borderColor: 'rgb(147, 51, 234)',
-                    ...commonOptions
-                }];
-            } else {
-                currentChart.data.datasets = [
-                    {
-                        label: 'Effective Reading Rate (ERR)',
-                        data: sortedERR,
-                        borderColor: 'rgb(147, 51, 234)',
-                        ...commonOptions
-                    },
-                    {
-                        label: 'Comprehension Rate (%)',
-                        data: sortedComprehension,
-                        borderColor: 'rgb(75, 192, 192)',
-                        ...commonOptions
-                    },
-                    {
-                        label: 'Reading Speed (WPM)',
-                        data: sortedWPM,
-                        borderColor: 'rgb(255, 99, 132)',
-                        ...commonOptions
-                    },
-                    {
-                        label: 'Text Complexity',
-                        data: sortedComplexity,
-                        borderColor: 'rgb(255, 205, 86)',
-                        ...commonOptions
-                    }
-                ];
-            }
-            
+            currentChart.data.datasets = datasets;
             currentChart.update();
         }
 		
@@ -629,13 +620,14 @@
         
         indices.forEach(function(i) {
             const row = document.createElement('tr');
-            row.innerHTML = 
-                '<td>' + progressData.dates[i] + '</td>' +
-                '<td>' + progressData.comprehension[i] + '%</td>' +
-                '<td>' + progressData.wpm[i] + '</td>' +
-                '<td>' + progressData.err[i] + '</td>' +
-                '<td>' + progressData.complexity[i] + '</td>' +
-                '<td>' +
+                row.innerHTML = `
+                    '<td>' + progressData.dates[i] + '</td>' +
+                    '<td>' + progressData.comprehension[i] + '%</td>' +
+                    '<td>' + progressData.wpm[i] + '</td>' +
+                    '<td>' + progressData.err[i] + '</td>' +
+                    '<td>' + progressData.complexity[i] + '</td>' +
+                    '<td>' + progressData.progress[i] + '</td>' +
+                    '<td>' +
                     '<button class="btn-edit" onclick="editDataPoint(' + i + ')">Edit</button> ' +
                     '<button class="btn-danger" onclick="deleteDataPoint(' + i + ')">Delete</button>' +
                 '</td>';
@@ -649,33 +641,16 @@
             const comprehension = parseFloat(document.getElementById('comprehension').value);
             const wpm = parseInt(document.getElementById('wpm').value);
             const complexity = parseFloat(document.getElementById('complexity').value);
+            const { err, progress } = calculateMetrics();
 
             // Validation
-            if (!date || isNaN(comprehension) || isNaN(wpm) || isNaN(complexity)) {
-                showAlert('Please fill in all fields with valid numbers', 'error');
-                return;
-            }
-
-            if (comprehension > 100) {
-                showAlert('Comprehension rate cannot exceed 100%', 'error');
-                return;
-            }
-
-            if (complexity > 10) {
-                showAlert('Text complexity cannot exceed 10', 'error');
-                return;
-            }
-
-            if (wpm < 0 || comprehension < 0 || complexity < 0) {
-                showAlert('Values cannot be negative', 'error');
-                return;
-            }
-
             if (editingIndex >= 0) {
                 progressData.dates[editingIndex] = date;
                 progressData.comprehension[editingIndex] = comprehension;
                 progressData.wpm[editingIndex] = wpm;
                 progressData.complexity[editingIndex] = complexity;
+                progressData.err[editingIndex] = err;
+                progressData.progress[editingIndex] = progress;
                 editingIndex = -1;
                 document.querySelector('.btn-primary').textContent = 'Add Data Point';
             } else {
@@ -683,8 +658,11 @@
                 progressData.comprehension.push(comprehension);
                 progressData.wpm.push(wpm);
                 progressData.complexity.push(complexity);
+                progressData.err.push(err);
+                progressData.progress.push(progress);
             }
 
+            saveData();
             updateChart();
             updateDataTable();
             clearInputs();
@@ -719,6 +697,10 @@
             document.querySelector('.input-section').scrollIntoView({ behavior: 'smooth' });
         }
 		
+		function calculateMetrics() {
+            const comprehension = parseFloat(document.getElementById('comprehension').value) || 0;
+            const wpm = parseInt(document.getElementById('wpm').value) || 0;
+		
 		// Add function to calculate ERR
         function calculateERR() {
             const comprehension = parseFloat(document.getElementById('comprehension').value) || 0;
@@ -726,6 +708,18 @@
             const err = Math.round((wpm * comprehension) / 100);
             document.getElementById('err').value = err;
             return err;
+        }
+		
+		// Calculate daily progress if we have previous data
+            if (progressData.err.length > 0) {
+                const lastERR = progressData.err[progressData.err.length - 1];
+                const progress = lastERR > 0 ? ((err - lastERR) / lastERR * 100).toFixed(1) : 0;
+                document.getElementById('progress').value = progress;
+            } else {
+                document.getElementById('progress').value = '0.0';
+            }
+
+            return { err, progress: parseFloat(document.getElementById('progress').value) };
         }
 
         // Modified addDataPoint function to handle updates
