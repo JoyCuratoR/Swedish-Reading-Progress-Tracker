@@ -579,13 +579,6 @@
                 throw new Error('Failed to load from GitHub: ' + error.message);
             }
         }
-		
-		// Add this right after your existing loadFromGitHub function
-		const originalLoadFromGitHub = loadFromGitHub;
-		loadFromGitHub = async function() {
-			await originalLoadFromGitHub();
-			calculateProgressMetrics();
-		};
 
 
         // Chart handling
