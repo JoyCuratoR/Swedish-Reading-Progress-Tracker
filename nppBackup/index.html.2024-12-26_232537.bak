@@ -883,30 +883,6 @@
             reader.readAsText(file);
         }
 		
-		// Add this function in your <script> tag, before the calculateDailyProgress function:
-
-function getTrendHTML(value, label, isPositive) {
-    let trendClass = '';
-    let arrow = '';
-    
-    if (value > 0) {
-        trendClass = 'trend-up';
-        arrow = '↑';
-    } else if (value < 0) {
-        trendClass = 'trend-down';
-        arrow = '↓';
-    } else {
-        trendClass = 'trend-neutral';
-        arrow = '→';
-    }
-    
-    if (typeof isPositive !== 'undefined') {
-        trendClass = isPositive ? 'trend-up' : 'trend-down';
-    }
-    
-    return '<span class="' + trendClass + '">' + label + arrow + '</span>';
-}
-		
 		function calculateDailyProgress() {
             if (!progressData.dates || progressData.dates.length < 2) return;
 
