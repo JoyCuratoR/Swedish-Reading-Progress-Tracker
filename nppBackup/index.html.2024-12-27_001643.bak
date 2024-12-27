@@ -695,32 +695,31 @@
             currentChart.update();
         }
 		
-		// Update the updateDataTable function to use the same ERR calculation method
-function updateDataTable() {
-    const tableBody = document.getElementById('dataTableBody');
-    tableBody.innerHTML = '';
+		// Modified updateDataTable function
+		function updateDataTable() {
+        const tableBody = document.getElementById('dataTableBody');
+        tableBody.innerHTML = '';
+            
+            const indices = progressData.dates
+            .map((date, index) => ({ date, index }))
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .map(item => item.index);
         
-    const indices = progressData.dates
-        .map((date, index) => ({ date, index }))
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .map(item => item.index);
-    
-    indices.forEach(function(i) {
-        // Calculate ERR using the same method for consistency
-        const row = document.createElement('tr');
-        row.innerHTML = 
-            '<td>' + progressData.dates[i] + '</td>' +
-            '<td>' + progressData.comprehension[i] + '%</td>' +
-            '<td>' + progressData.wpm[i] + '</td>' +
-            '<td>' + progressData.err[i] + '</td>' +
-            '<td>' + progressData.complexity[i] + '</td>' +
-            '<td>' +
-                '<button class="btn-edit" onclick="editDataPoint(' + i + ')">Edit</button> ' +
-                '<button class="btn-danger" onclick="deleteDataPoint(' + i + ')">Delete</button>' +
-            '</td>';
-        tableBody.appendChild(row);
-    });
-}
+        indices.forEach(function(i) {
+            const row = document.createElement('tr');
+            row.innerHTML = 
+                '<td>' + progressData.dates[i] + '</td>' +
+                '<td>' + progressData.comprehension[i] + '%</td>' +
+                '<td>' + progressData.wpm[i] + '</td>' +
+                '<td>' + progressData.err[i] + '</td>' +
+                '<td>' + progressData.complexity[i] + '</td>' +
+                '<td>' +
+                    '<button class="btn-edit" onclick="editDataPoint(' + i + ')">Edit</button> ' +
+                    '<button class="btn-danger" onclick="deleteDataPoint(' + i + ')">Delete</button>' +
+                '</td>';
+            tableBody.appendChild(row);
+        });
+    }
 		
 
         function clearInputs() {
@@ -739,105 +738,95 @@ function updateDataTable() {
             updateChart();
         }
 
-       // Update the editDataPoint function to properly handle ERR
-function editDataPoint(index) {
-    editingIndex = index;
-    document.getElementById('date').value = progressData.dates[index];
-    document.getElementById('comprehension').value = progressData.comprehension[index];
-    document.getElementById('wpm').value = progressData.wpm[index];
-    document.getElementById('complexity').value = progressData.complexity[index];
-    calculateERR(); // This will update the ERR input field
-    document.querySelector('.btn-primary').textContent = 'Update Data Point';
-    document.querySelector('.input-section').scrollIntoView({ behavior: 'smooth' });
-}
+        // Modified editDataPoint function
+        function editDataPoint(index) {
+            editingIndex = index;
+            document.getElementById('date').value = progressData.dates[index];
+            document.getElementById('comprehension').value = progressData.comprehension[index];
+            document.getElementById('wpm').value = progressData.wpm[index];
+            document.getElementById('complexity').value = progressData.complexity[index];
+            calculateERR(); // Recalculate ERR when loading data for editing
+            document.querySelector('.btn-primary').textContent = 'Update Data Point';
+            document.querySelector('.input-section').scrollIntoView({ behavior: 'smooth' });
+        }
 		
-		// Update the calculateERR function to be more precise
-function calculateERR() {
-    const comprehension = parseFloat(document.getElementById('comprehension').value) || 0;
-    const wpm = parseInt(document.getElementById('wpm').value) || 0;
-    const err = Math.round((wpm * comprehension) / 100);
-    document.getElementById('err').value = err;
-    return err;
-}
-
-        // Update the addDataPoint function to ensure consistent ERR calculation
-async function addDataPoint() {
-    const date = document.getElementById('date').value;
-    const comprehension = parseFloat(document.getElementById('comprehension').value);
-    const wpm = parseInt(document.getElementById('wpm').value);
-    const complexity = parseFloat(document.getElementById('complexity').value);
-    const err = calculateERR(); // Use the same calculation method
-
-    // Validation
-    if (!date || isNaN(comprehension) || isNaN(wpm) || isNaN(complexity)) {
-        showAlert('Please fill in all fields with valid numbers', 'error');
-        return;
-    }
-
-    if (comprehension > 100) {
-        showAlert('Comprehension rate cannot exceed 100%', 'error');
-        return;
-    }
-
-    if (complexity > 10) {
-        showAlert('Text complexity cannot exceed 10', 'error');
-        return;
-    }
-
-    if (wpm < 0 || comprehension < 0 || complexity < 0) {
-        showAlert('Values cannot be negative', 'error');
-        return;
-    }
-
-    try {
-        if (editingIndex >= 0) {
-            progressData.dates[editingIndex] = date;
-            progressData.comprehension[editingIndex] = comprehension;
-            progressData.wpm[editingIndex] = wpm;
-            progressData.complexity[editingIndex] = complexity;
-            progressData.err[editingIndex] = err;
-            editingIndex = -1;
-            document.querySelector('.btn-primary').textContent = 'Add Data Point';
-            showAlert('Data point updated successfully!', 'success');
-        } else {
-            progressData.dates.push(date);
-            progressData.comprehension.push(comprehension);
-            progressData.wpm.push(wpm);
-            progressData.complexity.push(complexity);
-            progressData.err.push(err);
-            showAlert('New data point added successfully!', 'success');
+		// Add function to calculate ERR
+        function calculateERR() {
+            const comprehension = parseFloat(document.getElementById('comprehension').value) || 0;
+            const wpm = parseInt(document.getElementById('wpm').value) || 0;
+            const err = Math.round((wpm * comprehension) / 100);
+            document.getElementById('err').value = err;
+            return err;
         }
 
-        await saveToGitHub();
-        updateChart();
-        updateDataTable();
-        calculateDailyProgress();
-        clearInputs();
-    } catch (error) {
-        showAlert('Error saving data: ' + error.message, 'error');
-    }
-}
+        // Modified addDataPoint function to handle updates
+        async function addDataPoint() {
+            const date = document.getElementById('date').value;
+            const comprehension = parseFloat(document.getElementById('comprehension').value);
+            const wpm = parseInt(document.getElementById('wpm').value);
+            const complexity = parseFloat(document.getElementById('complexity').value);
+            const err = calculateERR();
 
+            // Validation
+            if (!date || isNaN(comprehension) || isNaN(wpm) || isNaN(complexity)) {
+                showAlert('Please fill in all fields with valid numbers', 'error');
+                return;
+            }
 
-        // Update the deleteDataPoint function to handle ERR array
-function deleteDataPoint(index) {
-    if (confirm('Are you sure you want to delete this data point?')) {
-        progressData.dates.splice(index, 1);
-        progressData.comprehension.splice(index, 1);
-        progressData.wpm.splice(index, 1);
-        progressData.complexity.splice(index, 1);
-        progressData.err.splice(index, 1); // Make sure to delete ERR value too
-		
-		// Save changes
-        saveToGitHub().then(() => {
-            updateChart();
-            updateDataTable();
-            calculateDailyProgress();
-        }).catch(error => {
-            showAlert('Error saving changes: ' + error.message, 'error');
-        });
-    }
-}
+            if (comprehension > 100) {
+                showAlert('Comprehension rate cannot exceed 100%', 'error');
+                return;
+            }
+
+            if (complexity > 10) {
+                showAlert('Text complexity cannot exceed 10', 'error');
+                return;
+            }
+
+            if (wpm < 0 || comprehension < 0 || complexity < 0) {
+                showAlert('Values cannot be negative', 'error');
+                return;
+            }
+
+            try {
+                if (editingIndex >= 0) {
+                    progressData.dates[editingIndex] = date;
+                    progressData.comprehension[editingIndex] = comprehension;
+                    progressData.wpm[editingIndex] = wpm;
+                    progressData.complexity[editingIndex] = complexity;
+                    progressData.err[editingIndex] = err;
+                    editingIndex = -1;
+                    document.querySelector('.btn-primary').textContent = 'Add Data Point';
+                    showAlert('Data point updated successfully!', 'success');
+                } else {
+                    progressData.dates.push(date);
+                    progressData.comprehension.push(comprehension);
+                    progressData.wpm.push(wpm);
+                    progressData.complexity.push(complexity);
+                    progressData.err.push(err);
+                    showAlert('New data point added successfully!', 'success');
+                }
+
+                await saveToGitHub();
+                updateChart();
+                updateDataTable();
+				calculateDailyProgress();
+                clearInputs();
+            } catch (error) {
+                showAlert('Error saving data: ' + error.message, 'error');
+            }
+        }
+
+        function deleteDataPoint(index) {
+            if (confirm('Are you sure you want to delete this data point?')) {
+                progressData.dates.splice(index, 1);
+                progressData.comprehension.splice(index, 1);
+                progressData.wpm.splice(index, 1);
+                progressData.complexity.splice(index, 1);
+                updateChart();
+                updateDataTable();
+            }
+        }
 
         function exportData() {
             let csv = 'Date,Comprehension,WPM,Complexity\n';
