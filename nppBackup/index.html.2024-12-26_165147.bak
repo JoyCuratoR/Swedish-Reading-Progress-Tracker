@@ -277,11 +277,11 @@
         <div class="input-section">
             <div class="input-group">
                 <label for="comprehension">Comprehension Rate (%)</label>
-                <input type="number" id="comprehension" placeholder="Comprehension percentage" oninput="calculateERR()">
+                <input type="number" id="comprehension" placeholder="Comprehension percentage" oninput="calculateMetrics()">
             </div>
             <div class="input-group">
                 <label for="wpm">Reading Speed (WPM)</label>
-                <input type="number" id="wpm" placeholder="Words per minute" oninput="calculateERR()">
+                <input type="number" id="wpm" placeholder="Words per minute" oninput="calculateMetrics()">
             </div>
             <div class="input-group">
                 <label for="err">Effective Reading Rate (ERR)</label>
@@ -290,6 +290,10 @@
             <div class="input-group">
                 <label for="complexity">Text Complexity (1-10)</label>
                 <input type="number" id="complexity" step="0.1" placeholder="Complexity level">
+            </div>
+            <div class="input-group">
+                <label for="progress">Daily Progress (%)</label>
+                <input type="number" id="progress" placeholder="Auto-calculated" class="auto-calculated" disabled>
             </div>
             <div class="input-group">
                 <label for="date">Date</label>
@@ -334,16 +338,17 @@
 
     <script>
         // Initialize data and chart variables
-        let progressData = {
-            dates: [],
-            comprehension: [],
-            wpm: [],
-            complexity: [],
-            err: []
-        };
-        let currentChart = null;
-        let currentView = 'overall';
-        let editingIndex = -1;
+            let progressData = {
+                dates: [],
+                comprehension: [],
+                wpm: [],
+                complexity: [],
+                err: [],
+                progress: []
+            };
+            let currentChart = null;
+            let currentView = 'overall';
+            let editingIndex = -1;
 
         // Modified window.onload function
         window.onload = async function() {
@@ -363,18 +368,23 @@
                 } catch (error) {
                     // If loading fails, ensure progressData is properly initialized
                     progressData = {
-                        dates: [],
-                        comprehension: [],
-                        wpm: [],
-                        complexity: [],
-                        err: []
-                    };
+                            dates: [],
+                            comprehension: [],
+                            wpm: [],
+                            complexity: [],
+                            err: [],
+                            progress: []
+                        };
                     showAlert('Error loading data: ' + error.message, 'error');
                 }
             }
             
             initChart();
         };
+		
+		function calculateMetrics() {
+                const comprehension = parseFloat(document.getElementById('comprehension').value) || 0;
+                const wpm = parseInt(document.getElementById('wpm').value) || 0;
 
         // Alert handling
         function showAlert(message, type) {
@@ -727,6 +737,18 @@
             document.getElementById('err').value = err;
             return err;
         }
+		
+		// Calculate daily progress if we have previous data
+                if (progressData.err.length > 0) {
+                    const lastERR = progressData.err[progressData.err.length - 1];
+                    const progress = lastERR > 0 ? ((err - lastERR) / lastERR * 100).toFixed(1) : 0;
+                    document.getElementById('progress').value = progress;
+                } else {
+                    document.getElementById('progress').value = '0.0';
+                }
+
+                return { err, progress: parseFloat(document.getElementById('progress').value) };
+            }
 
         // Modified addDataPoint function to handle updates
         async function addDataPoint() {
