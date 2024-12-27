@@ -699,9 +699,6 @@
 function updateDataTable() {
     const tableBody = document.getElementById('dataTableBody');
     tableBody.innerHTML = '';
-    
-    // Debug log the full data structure
-    console.log('Full progressData:', progressData);
         
     const indices = progressData.dates
         .map((date, index) => ({ date, index }))
@@ -709,19 +706,13 @@ function updateDataTable() {
         .map(item => item.index);
     
     indices.forEach(function(i) {
-        // Debug log for each row
-        console.log('Row index:', i);
-        console.log('Date:', progressData.dates[i]);
-        console.log('Comprehension:', progressData.comprehension[i]);
-        console.log('WPM:', progressData.wpm[i]);
-        console.log('ERR:', progressData.err[i]);
-        
+        // Calculate ERR using the same method for consistency
         const row = document.createElement('tr');
         row.innerHTML = 
             '<td>' + progressData.dates[i] + '</td>' +
             '<td>' + progressData.comprehension[i] + '%</td>' +
             '<td>' + progressData.wpm[i] + '</td>' +
-            '<td>' + (progressData.err[i] || Math.round((progressData.wpm[i] * progressData.comprehension[i]) / 100)) + '</td>' +
+            '<td>' + progressData.err[i] + '</td>' +
             '<td>' + progressData.complexity[i] + '</td>' +
             '<td>' +
                 '<button class="btn-edit" onclick="editDataPoint(' + i + ')">Edit</button> ' +
