@@ -1,9 +1,10 @@
 <b>Key features of this language learning reading comprehension progress tracker app:</b>
-- Track Comprehension rate, Reading speed/Word per Minute (WPM), Level difficulty, and Date
+- Track Comprehension rate, Reading speed/Word per Minute (WPM), Effective Reading Rate, Level difficulty, and Date
 - Visualize your data with overall progress of Comprehension rate and a detailed look at all three metrics
 - Easily export or import a set of data using .csv file extension
 - And if you accidently make a mistake entering in your data, you can either edit or delete the data point
 - Save your dataset in your own GitHub repository using a Personal Access Token and GitHub Integration
+- Track your Daily progress, Streak count, and get a summary of how many percent you've improved in the last 30 days
 
 <br></br>
 
@@ -62,5 +63,12 @@ Effective Reading Rate = WPM × (Comprehension % ÷ 100)
 For example, if you read 300 WPM and got 80% on your comprehension questions, your effective reading rate would be:
 300 × (80 ÷ 100) = 240 effective words per minute
 
-For context, many language learners at early stages might read at 40-50 words per minute or even slower.
+For context, many language learners at early stages might read at 40-50 words per minute (wpm) or even slower.
+
+<br></br>
+
+<b>What's the difference between Words Per Minute (WPM) and Effective Reading Rate (ERR)?</b>
+<b>Words per minute (WPM)</b> is a straightforward metric that measures how many words a person reads in one minute. It is typically used as a simple measure of reading speed. WPM counts the total number of words read, regardless of how well the material is understood or retained. It doesn't account for the comprehension or depth of processing of the text.
+
+<b>Effective reading rate</b> is a more nuanced metric that combines both speed and comprehension. It refers to how efficiently someone reads while maintaining a good level of understanding and retention. It takes into account the quality of reading (comprehension) along with speed. For example, a person may read a passage quickly but if they don’t understand or remember much, their effective reading rate may be lower. Conversely, if someone reads slowly but deeply understands the material, their effective reading rate could still be considered high.
 
