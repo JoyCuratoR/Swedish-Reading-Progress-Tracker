@@ -254,7 +254,7 @@
 		
 		.progress-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
             margin-bottom: 2rem;
         }
@@ -277,12 +277,6 @@
             align-items: center;
             gap: 0.5rem;
             font-size: 0.875rem;
-        }
-
-        .goal-progress {
-            margin-top: 0.5rem;
-            font-size: 0.875rem;
-            color: var(--text-secondary);
         }
 
         .trend-up { color: var(--success-color); }
@@ -310,28 +304,25 @@
 		
 		<!-- Add Progress Analysis Section right after the GitHub settings -->
         <div class="card">
-        <h3>Daily Progress Analysis</h3>
-        <div class="progress-stats">
-            <div class="stat-card">
-                <h4>Daily Progress Check</h4>
-                <div class="stat-value" id="dailyProgress">-</div>
-                <div class="trend-indicator" id="dailyTrend"></div>
-                <div class="goal-progress" id="dailyGoalProgress"></div>
-            </div>
-            <div class="stat-card">
-                <h4>Streak Count</h4>
-                <div class="stat-value" id="streakCount">-</div>
-                <div class="trend-indicator" id="streakTrend"></div>
-                <div class="goal-progress" id="streakProgress"></div>
-            </div>
-            <div class="stat-card">
-                <h4>Monthly Target</h4>
-                <div class="stat-value" id="monthlyTarget">-</div>
-                <div class="trend-indicator" id="monthlyTrend"></div>
-                <div class="goal-progress" id="monthlyProgress"></div>
+            <h3>Progress Analysis</h3>
+            <div class="progress-stats">
+                <div class="stat-card">
+                    <h4>Latest Reading Session</h4>
+                    <div class="stat-value" id="latestComprehension">-</div>
+                    <div class="trend-indicator" id="comprehensionTrend"></div>
+                </div>
+                <div class="stat-card">
+                    <h4>Average Improvement</h4>
+                    <div class="stat-value" id="avgImprovement">-</div>
+                    <div class="trend-indicator" id="improvementTrend"></div>
+                </div>
+                <div class="stat-card">
+                    <h4>Consistency Score</h4>
+                    <div class="stat-value" id="consistencyScore">-</div>
+                    <div class="trend-indicator" id="consistencyTrend"></div>
+                </div>
             </div>
         </div>
-    </div>
 
         <!-- Alert Messages -->
         <div class="alert alert-success" id="success-alert"></div>
@@ -416,7 +407,7 @@
 			const originalOnload = window.onload;
         window.onload = async function() {
             await originalOnload();
-            calculateDailyProgress();
+            calculateProgressMetrics();
         };
             
             // Load GitHub settings if they exist
@@ -767,7 +758,7 @@
 			const originalAddDataPoint = addDataPoint;
         addDataPoint = async function() {
             await originalAddDataPoint();
-            calculateDailyProgress();
+            calculateProgressMetrics();
         };
 
             // Validation
@@ -885,79 +876,68 @@
             reader.readAsText(file);
         }
 		
-		function calculateDailyProgress() {
-            if (!progressData.dates || progressData.dates.length < 2) return;
+		function calculateProgressMetrics() {
+            if (!progressData.dates || progressData.dates.length === 0) return;
 
-            // Sort data chronologically
-            const sortedData = progressData.dates
-                .map((date, index) => ({
-                    date: new Date(date),
-                    comprehension: progressData.comprehension[index]
-                }))
-                .sort((a, b) => b.date - a.date); // Latest first
+            // Sort data by date
+            const sortedIndices = progressData.dates
+                .map((date, index) => ({ date, index }))
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .map(item => item.index);
 
-            // Calculate daily metrics
-            const latest = sortedData[0];
-            const previous = sortedData[1];
-            const dailyChange = latest.comprehension - previous.comprehension;
-            
-            // Calculate streak
-            let streak = 0;
-            for (let i = 0; i < sortedData.length - 1; i++) {
-                const curr = sortedData[i];
-                const prev = sortedData[i + 1];
-                const daysDiff = (curr.date - prev.date) / (1000 * 60 * 60 * 24);
-                const improvement = curr.comprehension - prev.comprehension;
-                
-                if (daysDiff === 1 && improvement >= 1) {
-                    streak++;
-                } else {
-                    break;
-                }
+            // Get latest comprehension and its change
+            const latestIdx = sortedIndices[sortedIndices.length - 1];
+            const prevIdx = sortedIndices[sortedIndices.length - 2] || latestIdx;
+            const latestComprehension = progressData.comprehension[latestIdx];
+            const comprehensionChange = latestComprehension - progressData.comprehension[prevIdx];
+
+            // Calculate average improvement over time
+            let totalImprovement = 0;
+            let improvementCount = 0;
+            for (let i = 1; i < sortedIndices.length; i++) {
+                const curr = progressData.comprehension[sortedIndices[i]];
+                const prev = progressData.comprehension[sortedIndices[i - 1]];
+                const improvement = curr - prev;
+                totalImprovement += improvement;
+                improvementCount++;
             }
+            const avgImprovement = improvementCount > 0 ? totalImprovement / improvementCount : 0;
 
-            // Calculate monthly target
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-            const monthlyData = sortedData.filter(d => d.date >= thirtyDaysAgo);
-            const monthlyImprovement = monthlyData.length >= 2 ? 
-                monthlyData[0].comprehension - monthlyData[monthlyData.length - 1].comprehension : 0;
-            const expectedMonthlyGain = 30; // 1% per day for 30 days
+            // Calculate consistency score (percentage of sessions with improvement)
+            const improvementSessions = sortedIndices.reduce((count, _, idx) => {
+                if (idx === 0) return count;
+                const improvement = progressData.comprehension[sortedIndices[idx]] - 
+                                  progressData.comprehension[sortedIndices[idx - 1]];
+                return improvement >= 1 ? count + 1 : count;
+            }, 0);
+            const consistencyScore = ((improvementSessions / (sortedIndices.length - 1)) * 100) || 0;
 
-            updateDailyProgressUI(dailyChange, streak, monthlyImprovement, expectedMonthlyGain);
+            updateProgressUI(latestComprehension, comprehensionChange, avgImprovement, consistencyScore);
         }
 
-        function updateDailyProgressUI(dailyChange, streak, monthlyGain, expectedMonthlyGain) {
-            // Update daily progress
-            const dailyProgressEl = document.getElementById('dailyProgress');
-            const dailyTrendEl = document.getElementById('dailyTrend');
-            const dailyGoalEl = document.getElementById('dailyGoalProgress');
-            
-            dailyProgressEl.textContent = `${dailyChange >= 0 ? '+' : ''}${dailyChange.toFixed(1)}%`;
-            dailyTrendEl.innerHTML = getTrendHTML(dailyChange, "Today's change: ", dailyChange >= 1);
-            dailyGoalEl.textContent = dailyChange >= 1 ? 
-                "Met daily 1% goal! 🎉" : 
-                "Goal: Improve by 1% from previous session";
+         function updateProgressUI(latest, change, avgImprovement, consistency) {
+            // Update latest comprehension
+            document.getElementById('latestComprehension').textContent = `${latest.toFixed(1)}%`;
+            document.getElementById('comprehensionTrend').innerHTML = 
+                getTrendHTML(change, 'Last session: ', change >= 1);
 
-            // Update streak
-            const streakEl = document.getElementById('streakCount');
-            const streakTrendEl = document.getElementById('streakTrend');
-            const streakProgressEl = document.getElementById('streakProgress');
-            
-            streakEl.textContent = `${streak} days`;
-            streakTrendEl.innerHTML = getTrendHTML(streak, 'Current streak: ', streak > 0);
-            streakProgressEl.textContent = streak > 0 ? 
-                `Keep it up! ${streak} days of 1%+ improvement` : 
-                "Start a new streak today!";
+            // Update average improvement
+            document.getElementById('avgImprovement').textContent = 
+                `${avgImprovement > 0 ? '+' : ''}${avgImprovement.toFixed(1)}%`;
+            document.getElementById('improvementTrend').innerHTML = 
+                getTrendHTML(avgImprovement, 'Per session: ', avgImprovement >= 1);
 
-            // Update monthly target
-            const monthlyEl = document.getElementById('monthlyTarget');
-            const monthlyTrendEl = document.getElementById('monthlyTrend');
-            const monthlyProgressEl = document.getElementById('monthlyProgress');
-            
-            monthlyEl.textContent = `${monthlyGain.toFixed(1)}%`;
-            monthlyTrendEl.innerHTML = getTrendHTML(monthlyGain, 'Monthly gain: ', monthlyGain >= expectedMonthlyGain);
-            monthlyProgressEl.textContent = `Target: ${expectedMonthlyGain}% (1% × 30 days)`;
+            // Update consistency score
+            document.getElementById('consistencyScore').textContent = `${consistency.toFixed(1)}%`;
+            document.getElementById('consistencyTrend').innerHTML = 
+                getTrendHTML(consistency, 'Sessions on target: ', consistency >= 50);
+        }
+
+        function getTrendHTML(value, prefix, isPositive) {
+            const trendClass = isPositive ? 'trend-up' : 
+                             value >= 0 ? 'trend-neutral' : 'trend-down';
+            const arrow = isPositive ? '↑' : value >= 0 ? '→' : '↓';
+            return `<span class="${trendClass}">${arrow} ${prefix}${value.toFixed(1)}%</span>`;
         }
 		
     </script>
