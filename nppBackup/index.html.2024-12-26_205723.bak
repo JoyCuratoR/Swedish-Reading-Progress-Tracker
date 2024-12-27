@@ -583,11 +583,9 @@
 
                     updateChart();
                     updateDataTable();
-					calculateDailyProgress(); // Add this to update progress metrics
                 }
             } catch (error) {
-                console.error('Failed to load from GitHub:', error);
-				showAlert('Failed to load from GitHub: ' + error.message, 'error');
+                throw new Error('Failed to load from GitHub: ' + error.message);
             }
         }
 		
@@ -766,6 +764,11 @@
             const wpm = parseInt(document.getElementById('wpm').value);
             const complexity = parseFloat(document.getElementById('complexity').value);
             const err = calculateERR();
+			const originalAddDataPoint = addDataPoint;
+        addDataPoint = async function() {
+            await originalAddDataPoint();
+            calculateDailyProgress();
+        };
 
             // Validation
             if (!date || isNaN(comprehension) || isNaN(wpm) || isNaN(complexity)) {
@@ -810,7 +813,6 @@
                 await saveToGitHub();
                 updateChart();
                 updateDataTable();
-				calculateDailyProgress();
                 clearInputs();
             } catch (error) {
                 showAlert('Error saving data: ' + error.message, 'error');
