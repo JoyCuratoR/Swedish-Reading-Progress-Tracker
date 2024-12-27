@@ -593,7 +593,7 @@
 		const originalLoadFromGitHub = loadFromGitHub;
 		loadFromGitHub = async function() {
 			await originalLoadFromGitHub();
-			calculateDailyProgress();
+			calculateProgressMetrics();
 		};
 
 
