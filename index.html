@@ -4,355 +4,181 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swedish Reading Progress Tracker</title>
+    <!-- Modern CSS framework -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <!-- Chart.js for better visualizations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
         .chart-container {
-            margin-top: 20px;
+            position: relative;
             height: 400px;
-        }
-        .input-group {
-            margin-bottom: 15px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 15px;
-        }
-        .metric-group {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input, select, textarea {
             width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
         }
-        textarea {
-            height: 100px;
-            resize: vertical;
+        /* Hide password by default */
+        #githubToken {
+            -webkit-text-security: disc;
+            text-security: disc;
         }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-        .stat-card {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            text-align: center;
-        }
-        .github-auth {
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #f0f7ff;
-            border-radius: 4px;
-        }
-        .loading {
-            display: none;
-            margin: 10px 0;
+        /* Show on focus if needed */
+        #githubToken:focus {
+            -webkit-text-security: none;
+            text-security: none;
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
 </head>
-<body>
-    <div class="container">
-        <h1>Swedish Reading Progress Tracker</h1>
+<body class="bg-gray-50 min-h-screen p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+        <!-- Main Card -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-2xl font-bold mb-6">Swedish Reading Progress Tracker</h1>
 
-        <div class="github-auth" id="githubAuth">
-            <h3>GitHub Integration</h3>
-            <input type="text" id="githubToken" placeholder="Enter GitHub Personal Access Token">
-            <input type="text" id="githubRepo" placeholder="username/repository">
-            <button onclick="saveGithubSettings()">Connect GitHub</button>
-            <div class="loading" id="githubLoading">Saving to GitHub...</div>
-        </div>
-        
-        <div class="input-group">
-            <div class="metric-group">
-                <h3>Reading Session</h3>
-                <label for="readingTime">Reading Duration (minutes):</label>
-                <input type="number" id="readingTime" min="1" required>
-                
-                <label for="textType">Text Type:</label>
-                <select id="textType">
-                    <option value="news">News Article</option>
-                    <option value="story">Short Story</option>
-                    <option value="book">Book Chapter</option>
-                    <option value="social">Social Media</option>
-                    <option value="website">Website Content</option>
-                    <option value="other">Other</option>
-                </select>
-
-                <label for="comprehensionLevel">Comprehension Self-Assessment:</label>
-                <select id="comprehensionLevel">
-                    <option value="1">1 - Understood almost nothing</option>
-                    <option value="2">2 - Caught few words</option>
-                    <option value="3">3 - Got the main idea</option>
-                    <option value="4">4 - Understood most parts</option>
-                    <option value="5">5 - Fully understood</option>
-                </select>
+            <!-- GitHub Integration -->
+            <div class="bg-blue-50 rounded-lg p-4 mb-6">
+                <h2 class="text-lg font-semibold mb-2">GitHub Integration</h2>
+                <div class="space-y-2">
+                    <input type="password" id="githubToken" placeholder="GitHub Personal Access Token" 
+                           class="w-full p-2 border rounded">
+                    <input type="text" id="githubRepo" placeholder="username/repository" 
+                           class="w-full p-2 border rounded">
+                    <button onclick="saveGithubSettings()" 
+                            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                        Connect GitHub
+                    </button>
+                </div>
+                <div id="githubStatus" class="mt-2 text-sm"></div>
             </div>
 
-            <div class="metric-group">
-                <h3>Vocabulary Tracking</h3>
-                <label for="newWords">New Words Learned:</label>
-                <input type="number" id="newWords" min="0">
-                
-                <label for="lookups">Dictionary Lookups Needed:</label>
-                <input type="number" id="lookups" min="0">
-                
-                <label for="knownWords">Words Recognized Without Help:</label>
-                <input type="number" id="knownWords" min="0">
+            <!-- Session Input Form -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- Reading Session -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-semibold mb-4">Reading Session</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm mb-1">Reading Duration (minutes)</label>
+                            <input type="number" id="readingTime" min="1" required 
+                                   class="w-full p-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">Text Type</label>
+                            <select id="textType" class="w-full p-2 border rounded">
+                                <option value="news">News Article</option>
+                                <option value="story">Short Story</option>
+                                <option value="book">Book Chapter</option>
+                                <option value="social">Social Media</option>
+                                <option value="website">Website Content</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vocabulary Tracking -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-semibold mb-4">Vocabulary Tracking</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm mb-1">New Words Learned</label>
+                            <input type="number" id="newWords" min="0" 
+                                   class="w-full p-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">Dictionary Lookups</label>
+                            <input type="number" id="lookups" min="0" 
+                                   class="w-full p-2 border rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session Notes -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-semibold mb-4">Session Notes</h3>
+                    <div>
+                        <label class="block text-sm mb-1">Notes & Observations</label>
+                        <textarea id="notes" rows="4" 
+                                 class="w-full p-2 border rounded"
+                                 placeholder="What was challenging? What felt easier?"></textarea>
+                    </div>
+                </div>
             </div>
 
-            <div class="metric-group">
-                <h3>Session Notes</h3>
-                <label for="textTitle">Text Title/Source:</label>
-                <input type="text" id="textTitle">
-                
-                <label for="notes">Notes & Observations:</label>
-                <textarea id="notes" placeholder="What was challenging? What felt easier than before? Any patterns you noticed?"></textarea>
+            <!-- Action Buttons -->
+            <div class="flex gap-4 mb-6">
+                <button onclick="saveProgress()" 
+                        class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    Save Session
+                </button>
+                <button onclick="exportData()" 
+                        class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                    Export Data
+                </button>
+                <input type="file" id="importFile" class="hidden" onchange="importData(this.files[0])">
+                <button onclick="document.getElementById('importFile').click()" 
+                        class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                    Import Data
+                </button>
             </div>
-        </div>
 
-        <button onclick="saveProgress()">Save Session</button>
-        <button onclick="exportData()">Export Data</button>
-        <input type="file" id="importFile" style="display: none" onchange="importData(this.files[0])">
-        <button onclick="document.getElementById('importFile').click()">Import Data</button>
+            <!-- Status Messages -->
+            <div id="statusMessage" class="mb-6 hidden"></div>
 
-        <div class="stats">
-            <div class="stat-card">
-                <h3>Weekly Reading Time</h3>
-                <p id="weeklyTime">-</p>
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-blue-50 rounded-lg p-4 text-center">
+                    <h3 class="text-lg font-semibold mb-2" id="weeklyTime">0</h3>
+                    <p class="text-sm text-gray-600">Minutes this week</p>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4 text-center">
+                    <h3 class="text-lg font-semibold mb-2" id="totalWords">0</h3>
+                    <p class="text-sm text-gray-600">Total new words</p>
+                </div>
+                <div class="bg-purple-50 rounded-lg p-4 text-center">
+                    <h3 class="text-lg font-semibold mb-2" id="avgTime">0</h3>
+                    <p class="text-sm text-gray-600">Avg. minutes per session</p>
+                </div>
+                <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                    <h3 class="text-lg font-semibold mb-2" id="totalSessions">0</h3>
+                    <p class="text-sm text-gray-600">Total sessions</p>
+                </div>
             </div>
-            <div class="stat-card">
-                <h3>Comprehension Trend</h3>
-                <p id="comprehensionTrend">-</p>
-            </div>
-            <div class="stat-card">
-                <h3>Vocabulary Growth</h3>
-                <p id="vocabGrowth">-</p>
-            </div>
-            <div class="stat-card">
-                <h3>Lookup Ratio Trend</h3>
-                <p id="lookupTrend">-</p>
-            </div>
-        </div>
 
-        <div class="chart-container">
-            <canvas id="progressChart"></canvas>
+            <!-- Progress Chart -->
+            <div class="chart-container">
+                <canvas id="progressChart"></canvas>
+            </div>
         </div>
     </div>
 
     <script>
-        // Initialize data structure
+        // Initialize data and chart
         let progressData = JSON.parse(localStorage.getItem('readingProgress')) || [];
         let chart = null;
-        let githubToken = localStorage.getItem('githubToken') || '';
-        let githubRepo = localStorage.getItem('githubRepo') || '';
 
-        function saveGithubSettings() {
-            githubToken = document.getElementById('githubToken').value;
-            githubRepo = document.getElementById('githubRepo').value;
-            localStorage.setItem('githubToken', githubToken);
-            localStorage.setItem('githubRepo', githubRepo);
-            alert('GitHub settings saved!');
-        }
-
-        async function saveToGithub(data) {
-            if (!githubToken || !githubRepo) return;
-
-            document.getElementById('githubLoading').style.display = 'block';
-            
-            try {
-                // Get current file if exists
-                const filename = 'reading-progress.json';
-                let sha;
-                try {
-                    const response = await fetch(`https://api.github.com/repos/${githubRepo}/contents/${filename}`, {
-                        headers: {
-                            'Authorization': `token ${githubToken}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    });
-                    if (response.ok) {
-                        const fileInfo = await response.json();
-                        sha = fileInfo.sha;
-                    }
-                } catch (e) {
-                    console.log('File does not exist yet');
-                }
-
-                // Create or update file
-                const content = btoa(JSON.stringify(data, null, 2));
-                const response = await fetch(`https://api.github.com/repos/${githubRepo}/contents/${filename}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${githubToken}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    },
-                    body: JSON.stringify({
-                        message: 'Update reading progress',
-                        content: content,
-                        sha: sha
-                    })
-                });
-
-                if (!response.ok) throw new Error('Failed to save to GitHub');
-            } catch (error) {
-                console.error('GitHub save error:', error);
-                alert('Failed to save to GitHub. Check your token and repository settings.');
-            } finally {
-                document.getElementById('githubLoading').style.display = 'none';
-            }
-        }
-
-        function saveProgress() {
-            const entry = {
-                date: new Date().toISOString(),
-                readingTime: parseInt(document.getElementById('readingTime').value),
-                textType: document.getElementById('textType').value,
-                comprehensionLevel: parseInt(document.getElementById('comprehensionLevel').value),
-                newWords: parseInt(document.getElementById('newWords').value) || 0,
-                lookups: parseInt(document.getElementById('lookups').value) || 0,
-                knownWords: parseInt(document.getElementById('knownWords').value) || 0,
-                textTitle: document.getElementById('textTitle').value,
-                notes: document.getElementById('notes').value
-            };
-
-            if (!entry.readingTime) {
-                alert('Please enter reading time');
-                return;
-            }
-
-            progressData.push(entry);
-            localStorage.setItem('readingProgress', JSON.stringify(progressData));
-            saveToGithub(progressData);
-            
-            updateChart();
-            updateStats();
-            
-            // Clear form
-            document.getElementById('readingTime').value = '';
-            document.getElementById('newWords').value = '';
-            document.getElementById('lookups').value = '';
-            document.getElementById('knownWords').value = '';
-            document.getElementById('textTitle').value = '';
-            document.getElementById('notes').value = '';
-        }
-
-        function updateStats() {
-            if (progressData.length === 0) return;
-
-            // Calculate weekly reading time
-            const oneWeekAgo = new Date();
-            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-            const weeklyTime = progressData
-                .filter(entry => new Date(entry.date) > oneWeekAgo)
-                .reduce((sum, entry) => sum + entry.readingTime, 0);
-
-            // Calculate comprehension trend
-            const recentEntries = progressData.slice(-10);
-            const comprehensionTrend = recentEntries.length > 1 
-                ? ((recentEntries[recentEntries.length-1].comprehensionLevel - recentEntries[0].comprehensionLevel) / recentEntries[0].comprehensionLevel * 100).toFixed(1)
-                : 0;
-
-            // Calculate vocabulary growth
-            const totalNewWords = progressData.reduce((sum, entry) => sum + entry.newWords, 0);
-            
-            // Calculate lookup ratio trend
-            const recentLookupRatio = recentEntries.length > 0
-                ? (recentEntries.reduce((sum, entry) => sum + entry.lookups, 0) / recentEntries.reduce((sum, entry) => sum + entry.knownWords, 0) * 100).toFixed(1)
-                : 0;
-
-            document.getElementById('weeklyTime').textContent = `${weeklyTime} minutes`;
-            document.getElementById('comprehensionTrend').textContent = `${comprehensionTrend}%`;
-            document.getElementById('vocabGrowth').textContent = `${totalNewWords} words`;
-            document.getElementById('lookupTrend').textContent = `${recentLookupRatio}%`;
-        }
-
-        function updateChart() {
-            if (!chart) return;
-
-            const dates = progressData.map(entry => new Date(entry.date).toLocaleDateString());
-            const comprehensionData = progressData.map(entry => entry.comprehensionLevel);
-            const lookupRatios = progressData.map(entry => 
-                entry.knownWords ? (entry.lookups / entry.knownWords * 100) : 0
-            );
-
-            chart.data.labels = dates;
-            chart.data.datasets = [{
-                label: 'Comprehension Level',
-                data: comprehensionData,
-                borderColor: '#4CAF50',
-                yAxisID: 'y'
-            }, {
-                label: 'Lookup Ratio (%)',
-                data: lookupRatios,
-                borderColor: '#ff6384',
-                yAxisID: 'y1'
-            }];
-            
-            chart.update();
-        }
-
+        // Initialize chart
         function initChart() {
             const ctx = document.getElementById('progressChart').getContext('2d');
             chart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: [],
-                    datasets: []
+                    datasets: [{
+                        label: 'Reading Time (minutes)',
+                        data: [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        tension: 0.1
+                    }, {
+                        label: 'New Words',
+                        data: [],
+                        borderColor: 'rgb(16, 185, 129)',
+                        tension: 0.1
+                    }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
                         y: {
-                            beginAtZero: true,
-                            max: 5,
-                            title: {
-                                display: true,
-                                text: 'Comprehension Level'
-                            }
-                        },
-                        y1: {
-                            beginAtZero: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Lookup Ratio (%)'
-                            }
+                            beginAtZero: true
                         }
                     }
                 }
@@ -360,6 +186,136 @@
             updateChart();
         }
 
+        // Save progress
+        function saveProgress() {
+            const readingTime = parseInt(document.getElementById('readingTime').value);
+            if (!readingTime) {
+                showStatus('Please enter reading time', 'error');
+                return;
+            }
+
+            const entry = {
+                date: new Date().toISOString(),
+                readingTime: readingTime,
+                textType: document.getElementById('textType').value,
+                newWords: parseInt(document.getElementById('newWords').value) || 0,
+                lookups: parseInt(document.getElementById('lookups').value) || 0,
+                notes: document.getElementById('notes').value
+            };
+
+            progressData.push(entry);
+            localStorage.setItem('readingProgress', JSON.stringify(progressData));
+            
+            updateChart();
+            updateStats();
+            clearForm();
+            showStatus('Session saved successfully!', 'success');
+
+            // Save to GitHub if configured
+            if (localStorage.getItem('githubToken')) {
+                saveToGithub(progressData);
+            }
+        }
+
+        // Update chart
+        function updateChart() {
+            if (!chart) return;
+
+            const dates = progressData.map(entry => new Date(entry.date).toLocaleDateString());
+            const readingTimes = progressData.map(entry => entry.readingTime);
+            const newWords = progressData.map(entry => entry.newWords);
+
+            chart.data.labels = dates;
+            chart.data.datasets[0].data = readingTimes;
+            chart.data.datasets[1].data = newWords;
+            chart.update();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+            const weeklyTime = progressData
+                .filter(entry => new Date(entry.date) > oneWeekAgo)
+                .reduce((sum, entry) => sum + entry.readingTime, 0);
+
+            const totalWords = progressData.reduce((sum, entry) => sum + entry.newWords, 0);
+            const avgTime = progressData.length > 0 
+                ? Math.round(progressData.reduce((sum, entry) => sum + entry.readingTime, 0) / progressData.length)
+                : 0;
+
+            document.getElementById('weeklyTime').textContent = weeklyTime;
+            document.getElementById('totalWords').textContent = totalWords;
+            document.getElementById('avgTime').textContent = avgTime;
+            document.getElementById('totalSessions').textContent = progressData.length;
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `mb-6 p-4 rounded ${type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+            statusDiv.classList.remove('hidden');
+            setTimeout(() => statusDiv.classList.add('hidden'), 3000);
+        }
+
+        // Clear form
+        function clearForm() {
+            document.getElementById('readingTime').value = '';
+            document.getElementById('newWords').value = '';
+            document.getElementById('lookups').value = '';
+            document.getElementById('notes').value = '';
+        }
+
+        // GitHub integration
+        async function saveToGithub(data) {
+            const token = localStorage.getItem('githubToken');
+            const repo = localStorage.getItem('githubRepo');
+            if (!token || !repo) return;
+
+            try {
+                const response = await fetch(`https://api.github.com/repos/${repo}/contents/reading-progress.json`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: 'Update reading progress',
+                        content: btoa(JSON.stringify(data)),
+                        sha: localStorage.getItem('githubSha')
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    localStorage.setItem('githubSha', result.content.sha);
+                    showStatus('Saved to GitHub!', 'success');
+                } else {
+                    throw new Error('Failed to save to GitHub');
+                }
+            } catch (error) {
+                showStatus('Failed to save to GitHub', 'error');
+            }
+        }
+
+        // Save GitHub settings
+        function saveGithubSettings() {
+            const token = document.getElementById('githubToken').value;
+            const repo = document.getElementById('githubRepo').value;
+            
+            if (!token || !repo) {
+                showStatus('Please enter both token and repository', 'error');
+                return;
+            }
+
+            localStorage.setItem('githubToken', token);
+            localStorage.setItem('githubRepo', repo);
+            showStatus('GitHub settings saved!', 'success');
+        }
+
+        // Export/Import functions
         function exportData() {
             const dataStr = JSON.stringify(progressData, null, 2);
             const blob = new Blob([dataStr], { type: 'application/json' });
@@ -384,9 +340,9 @@
                     localStorage.setItem('readingProgress', JSON.stringify(progressData));
                     updateChart();
                     updateStats();
-                    alert('Data imported successfully!');
+                    showStatus('Data imported successfully!', 'success');
                 } catch (error) {
-                    alert('Error importing data. Please make sure the file is valid JSON.');
+                    showStatus('Error importing data', 'error');
                 }
             };
             reader.readAsText(file);
@@ -395,11 +351,8 @@
         // Initialize on load
         window.onload = function() {
             initChart();
-            if (progressData.length > 0) {
-                updateStats();
-            }
-            if (githubToken) {
-                document.getElementById('githubToken').value = githubToken;
-            }
-            if (githubRepo) {
-                document.getElementById('githubRepo').value = githubRepo;
+            updateStats();
+        };
+    </script>
+</body>
+</html>
