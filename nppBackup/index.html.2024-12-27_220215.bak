@@ -24,27 +24,6 @@
             -webkit-text-security: none;
             text-security: none;
         }
-		.modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-        .modal-content {
-            background-color: white;
-            margin: 15% auto;
-            padding: 20px;
-            border-radius: 8px;
-            width: 80%;
-            max-width: 500px;
-        }
-    </style>
-</head>
-<body class="bg-gray-50 min-h-screen p-6">
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-6">
@@ -71,28 +50,18 @@
 
             <!-- Session Input Form -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <!-- Reading Session section modification -->
-    <div class="bg-gray-50 rounded-lg p-4">
-        <h3 class="font-semibold mb-4">Reading Session</h3>
-        <div class="space-y-3">
-            <div>
-                <label class="block text-sm mb-1">Date</label>
-                <input type="datetime-local" id="sessionDate" 
-                       class="w-full p-2 border rounded">
-            </div>
-            <div>
-                <label class="block text-sm mb-1">Reading Duration (minutes)</label>
-                <input type="number" id="readingTime" min="1" required 
-                       class="w-full p-2 border rounded">
-            </div>
-            <div>
-                <label class="block text-sm mb-1">Words Read</label>
-                <input type="number" id="wordsRead" min="1"
-                       class="w-full p-2 border rounded">
-            </div>
-            <div>
-                <label class="block text-sm mb-1">Text Type</label>
-                <select id="textType" class="w-full p-2 border rounded">
+                <!-- Reading Session -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="font-semibold mb-4">Reading Session</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm mb-1">Reading Duration (minutes)</label>
+                            <input type="number" id="readingTime" min="1" required 
+                                   class="w-full p-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">Text Type</label>
+                            <select id="textType" class="w-full p-2 border rounded">
                                 <option value="news">News Article</option>
                                 <option value="story">Short Story</option>
                                 <option value="book">Book Chapter</option>
@@ -103,57 +72,7 @@
                         </div>
                     </div>
                 </div>
-				
-				<!-- Add Data Management section -->
-    <div class="mt-6 bg-white rounded-lg shadow p-4">
-        <h3 class="font-semibold mb-4">Session History</h3>
-        <div class="overflow-x-auto">
-            <table class="min-w-full table-auto">
-                <thead>
-                    <tr class="bg-gray-50">
-                        <th class="px-4 py-2">Date</th>
-                        <th class="px-4 py-2">Time (min)</th>
-                        <th class="px-4 py-2">Words Read</th>
-                        <th class="px-4 py-2">Reading Speed (wpm)</th>
-                        <th class="px-4 py-2">Daily Improvement</th>
-                        <th class="px-4 py-2">Actions</th>
-						<th class="px-4 py-2">Adjusted Speed</th>
-						<th class="px-4 py-2">Metrics</th>
-                    </tr>
-                </thead>
-                <tbody id="historyTableBody">
-                    <!-- Populated by JavaScript -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-				<!-- Edit Modal -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <h3 class="font-semibold mb-4">Edit Session</h3>
-            <input type="hidden" id="editIndex">
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-sm mb-1">Date</label>
-                    <input type="datetime-local" id="editDate" class="w-full p-2 border rounded">
-                </div>
-                <div>
-                    <label class="block text-sm mb-1">Reading Duration (minutes)</label>
-                    <input type="number" id="editTime" class="w-full p-2 border rounded">
-                </div>
-                <div>
-                    <label class="block text-sm mb-1">Words Read</label>
-                    <input type="number" id="editWords" class="w-full p-2 border rounded">
-                </div>
-                <!-- Add other fields as needed -->
-                <div class="flex justify-end gap-2">
-                    <button onclick="closeEditModal()" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
-                    <button onclick="saveEdit()" class="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
-                </div>
-            </div>
-        </div>
-    </div>
-	
+
                 <!-- Vocabulary Tracking -->
                 <div class="bg-gray-50 rounded-lg p-4">
                     <h3 class="font-semibold mb-4">Vocabulary Tracking</h3>
@@ -222,12 +141,6 @@
                     <p class="text-sm text-gray-600">Total sessions</p>
                 </div>
             </div>
-			
-			<div>
-				<label class="block text-sm mb-1">Comprehension Score (0-100)</label>
-				<input type="number" id="comprehensionScore" min="0" max="100" 
-				class="w-full p-2 border rounded">
-			</div>
 
             <!-- Progress Chart -->
             <div class="chart-container">
@@ -273,6 +186,36 @@
             updateChart();
         }
 
+        // Save progress
+        function saveProgress() {
+            const readingTime = parseInt(document.getElementById('readingTime').value);
+            if (!readingTime) {
+                showStatus('Please enter reading time', 'error');
+                return;
+            }
+
+            const entry = {
+                date: new Date().toISOString(),
+                readingTime: readingTime,
+                textType: document.getElementById('textType').value,
+                newWords: parseInt(document.getElementById('newWords').value) || 0,
+                lookups: parseInt(document.getElementById('lookups').value) || 0,
+                notes: document.getElementById('notes').value
+            };
+
+            progressData.push(entry);
+            localStorage.setItem('readingProgress', JSON.stringify(progressData));
+            
+            updateChart();
+            updateStats();
+            clearForm();
+            showStatus('Session saved successfully!', 'success');
+
+            // Save to GitHub if configured
+            if (localStorage.getItem('githubToken')) {
+                saveToGithub(progressData);
+            }
+        }
 
         // Update chart
         function updateChart() {
@@ -409,193 +352,7 @@
         window.onload = function() {
             initChart();
             updateStats();
-            updateHistoryTable();
-            // Set default date to now
-            document.getElementById('sessionDate').value = new Date().toISOString().slice(0, 16);
         };
-		
-		 // Modify saveProgress function to include words read and date
-        function saveProgress() {
-            const readingTime = parseInt(document.getElementById('readingTime').value);
-            const wordsRead = parseInt(document.getElementById('wordsRead').value);
-            const sessionDate = document.getElementById('sessionDate').value;
-            
-            if (!readingTime || !wordsRead) {
-                showStatus('Please enter both reading time and words read', 'error');
-                return;
-            }
-
-            const entry = {
-                date: sessionDate || new Date().toISOString(),
-                readingTime: readingTime,
-                wordsRead: wordsRead,
-                readingSpeed: Math.round(wordsRead / readingTime), // words per minute
-                textType: document.getElementById('textType').value,
-                newWords: parseInt(document.getElementById('newWords').value) || 0,
-                lookups: parseInt(document.getElementById('lookups').value) || 0,
-                notes: document.getElementById('notes').value
-            };
-
-            // Calculate improvement if there are previous entries
-            if (progressData.length > 0) {
-                const lastEntry = progressData[progressData.length - 1];
-                entry.improvement = calculateImprovement(lastEntry.readingSpeed, entry.readingSpeed);
-            }
-
-            progressData.push(entry);
-            localStorage.setItem('readingProgress', JSON.stringify(progressData));
-            
-            updateChart();
-            updateStats();
-            updateHistoryTable();
-            clearForm();
-            showStatus('Session saved successfully!', 'success');
-			
-			// Save to GitHub if configured
-            if (localStorage.getItem('githubToken')) {
-                saveToGithub(progressData);
-            }
-        }
-
-        // Calculate improvement percentage
-        function calculateImprovement(previousSpeed, currentSpeed) {
-            return ((currentSpeed - previousSpeed) / previousSpeed * 100).toFixed(2);
-        }
-		
-		// Update history table to show new metrics
-function updateHistoryTable() {
-    const tbody = document.getElementById('historyTableBody');
-    tbody.innerHTML = '';
-    
-    progressData.forEach((entry, index) => {
-        const tr = document.createElement('tr');
-        const improvementClass = entry.improvement >= 1 ? 'text-green-600' : 'text-red-600';
-        
-        tr.innerHTML = 
-            '<td class="px-4 py-2">' + new Date(entry.date).toLocaleString() + '</td>' +
-            '<td class="px-4 py-2">' + entry.readingTime + '</td>' +
-            '<td class="px-4 py-2">' + entry.wordsRead + '</td>' +
-            '<td class="px-4 py-2">' + Math.round(entry.adjustedReadingSpeed || 0) + '</td>' +
-            '<td class="px-4 py-2 ' + improvementClass + '">' +
-                (entry.improvement ? entry.improvement + '%' : 'N/A') +
-            '</td>' +
-            '<td class="px-4 py-2">' +
-                '<span class="text-sm text-gray-600">' +
-                    'Comprehension: ' + (entry.comprehensionScore || 'N/A') + '%<br>' +
-                    'Lookups: ' + (entry.lookups || 0) +
-                '</span>' +
-            '</td>' +
-            '<td class="px-4 py-2">' +
-                '<button onclick="editEntry(' + index + ')" class="text-blue-500">Edit</button>' +
-                '<button onclick="deleteEntry(' + index + ')" class="text-red-500 ml-2">Delete</button>' +
-            '</td>';
-        
-        tbody.appendChild(tr);
-    });
-}
-
-        // Edit entry
-        function editEntry(index) {
-            const entry = progressData[index];
-            document.getElementById('editIndex').value = index;
-            document.getElementById('editDate').value = entry.date.slice(0, 16);
-            document.getElementById('editTime').value = entry.readingTime;
-            document.getElementById('editWords').value = entry.wordsRead;
-            document.getElementById('editModal').style.display = 'block';
-        }
-		
-	// Constants for standardized texts
-const STANDARDIZED_TEXTS = {
-    beginner: {
-        text: "Hej! Jag heter Anna. Jag bor i Stockholm...", // Add your full standardized text here
-        wordCount: 100,
-        difficulty: 1
-    },
-    intermediate: {
-        text: "Sverige är ett vackert land med många...", // Add your full standardized text here
-        wordCount: 150,
-        difficulty: 2
-    },
-    advanced: {
-        text: "Den svenska ekonomin har under det senaste...", // Add your full standardized text here
-        wordCount: 200,
-        difficulty: 3
-    }
-};
-
-// Enhanced progress tracking functions
-function calculateAdjustedReadingSpeed(entry) {
-    const baseSpeed = entry.wordsRead / entry.readingTime;
-    const difficultyFactor = getDifficultyFactor(entry.textType);
-    const comprehensionFactor = getComprehensionFactor(entry.comprehensionScore);
-    const lookupPenalty = calculateLookupPenalty(entry.lookups, entry.wordsRead);
-    
-    return baseSpeed * difficultyFactor * comprehensionFactor * (1 - lookupPenalty);
-}
-
-function getDifficultyFactor(textType) {
-    const difficultyFactors = {
-        'news': 1.0,
-        'story': 1.1,
-        'book': 1.2,
-        'social': 0.9,
-        'website': 1.0,
-        'standardized': 1.0
-    };
-    return difficultyFactors[textType] || 1.0;
-}
-
-function getComprehensionFactor(score) {
-    if (!score) return 1.0;
-    return 0.5 + (score / 200); // Scales from 0.5 to 1.0 based on comprehension
-}
-
-function calculateLookupPenalty(lookups, totalWords) {
-    return Math.min(lookups / totalWords, 0.5); // Max 50% penalty for lookups
-}
-
-// Modify saveProgress to include new metrics
-function saveProgress() {
-    const readingTime = parseInt(document.getElementById('readingTime').value);
-    const wordsRead = parseInt(document.getElementById('wordsRead').value);
-    const sessionDate = document.getElementById('sessionDate').value;
-    const comprehensionScore = parseInt(document.getElementById('comprehensionScore').value) || 0;
-    
-    if (!readingTime || !wordsRead) {
-        showStatus('Please enter both reading time and words read', 'error');
-        return;
-    }
-
-    const entry = {
-        date: sessionDate || new Date().toISOString(),
-        readingTime: readingTime,
-        wordsRead: wordsRead,
-        textType: document.getElementById('textType').value,
-        comprehensionScore: comprehensionScore,
-        newWords: parseInt(document.getElementById('newWords').value) || 0,
-        lookups: parseInt(document.getElementById('lookups').value) || 0,
-        notes: document.getElementById('notes').value
-    };
-
-    // Calculate adjusted reading speed
-    entry.adjustedReadingSpeed = calculateAdjustedReadingSpeed(entry);
-
-    // Calculate improvement using 7-day rolling average
-    if (progressData.length > 0) {
-        const recentEntries = progressData.slice(-7);
-        const avgSpeed = recentEntries.reduce((sum, e) => sum + (e.adjustedReadingSpeed || 0), 0) / recentEntries.length;
-        entry.improvement = ((entry.adjustedReadingSpeed - avgSpeed) / avgSpeed * 100).toFixed(2);
-    }
-
-    progressData.push(entry);
-    localStorage.setItem('readingProgress', JSON.stringify(progressData));
-    
-    updateChart();
-    updateStats();
-    updateHistoryTable();
-    clearForm();
-    showStatus('Session saved successfully!', 'success');
-}
     </script>
 </body>
 </html>
