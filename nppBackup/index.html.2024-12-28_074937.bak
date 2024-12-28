@@ -42,20 +42,6 @@
             width: 80%;
             max-width: 500px;
         }
-		
-		#statusMessage {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-    display: none;
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-6">
@@ -250,7 +236,6 @@
             <div class="chart-container" style="height: 400px;">
                 <canvas id="progressChart"></canvas>
             </div>
-			
         </div>
     </div>
 
@@ -350,27 +335,14 @@
             document.getElementById('totalSessions').textContent = progressData.length;
         }
 
-        // Status message handling
-function showStatus(message, type = 'success') {
-    const statusDiv = document.getElementById('statusMessage');
-    if (!statusDiv) {
-        // Create status div if it doesn't exist
-        const newStatusDiv = document.createElement('div');
-        newStatusDiv.id = 'statusMessage';
-        document.querySelector('.max-w-7xl').appendChild(newStatusDiv);
-    }
-    
-    const messageDiv = document.getElementById('statusMessage');
-    messageDiv.textContent = message;
-    messageDiv.className = `mb-6 p-4 rounded ${type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
-    messageDiv.style.display = 'block'; // Make sure it's visible
-    
-    // Auto-hide after 3 seconds
-    setTimeout(() => {
-        messageDiv.style.display = 'none';
-    }, 3000);
-}
-
+        // Show status message
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `mb-6 p-4 rounded ${type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+            statusDiv.classList.remove('hidden');
+            setTimeout(() => statusDiv.classList.add('hidden'), 3000);
+        }
 
         // Clear form
         function clearForm() {
@@ -381,115 +353,51 @@ function showStatus(message, type = 'success') {
         }
 
         // GitHub integration
-        async function saveGithubSettings() {
-    const token = document.getElementById('githubToken').value;
-    const repo = document.getElementById('githubRepo').value;
-    
-    if (!token || !repo) {
-        showStatus('Please enter both token and repository', 'error');
-        return;
-    }
+        async function saveToGithub(data) {
+            const token = localStorage.getItem('githubToken');
+            const repo = localStorage.getItem('githubRepo');
+            if (!token || !repo) return;
 
-    try {
-        // Test the credentials before saving
-        const response = await fetch(`https://api.github.com/repos/${repo}`, {
-            headers: {
-                'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json'
+            try {
+                const response = await fetch(`https://api.github.com/repos/${repo}/contents/reading-progress.json`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: 'Update reading progress',
+                        content: btoa(JSON.stringify(data)),
+                        sha: localStorage.getItem('githubSha')
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    localStorage.setItem('githubSha', result.content.sha);
+                    showStatus('Saved to GitHub!', 'success');
+                } else {
+                    throw new Error('Failed to save to GitHub');
+                }
+            } catch (error) {
+                showStatus('Failed to save to GitHub', 'error');
             }
-        });
-
-        if (response.ok) {
-            localStorage.setItem('githubToken', token);
-            localStorage.setItem('githubRepo', repo);
-            showStatus('GitHub settings saved successfully!', 'success');
-        } else {
-            throw new Error('Invalid credentials or repository');
         }
-    } catch (error) {
-        showStatus('Failed to validate GitHub credentials: ' + error.message, 'error');
-    }
-}
 
         // Save GitHub settings
-        function saveProgress() {
-    try {
-        const readingTime = parseInt(document.getElementById('readingTime').value);
-        const wordsRead = parseInt(document.getElementById('wordsRead').value);
-        const sessionDate = document.getElementById('sessionDate').value;
-        const comprehensionScore = parseInt(document.getElementById('comprehensionScore').value) || 0;
-        
-        // Validate required fields
-        if (!readingTime || isNaN(readingTime)) {
-            throw new Error('Please enter a valid reading time');
+        function saveGithubSettings() {
+            const token = document.getElementById('githubToken').value;
+            const repo = document.getElementById('githubRepo').value;
+            
+            if (!token || !repo) {
+                showStatus('Please enter both token and repository', 'error');
+                return;
+            }
+
+            localStorage.setItem('githubToken', token);
+            localStorage.setItem('githubRepo', repo);
+            showStatus('GitHub settings saved!', 'success');
         }
-        if (!wordsRead || isNaN(wordsRead)) {
-            throw new Error('Please enter a valid word count');
-        }
-
-        const entry = {
-            date: sessionDate || new Date().toISOString(),
-            readingTime: readingTime,
-            wordsRead: wordsRead,
-            textType: document.getElementById('textType').value,
-            comprehensionScore: comprehensionScore,
-            newWords: parseInt(document.getElementById('newWords').value) || 0,
-            lookups: parseInt(document.getElementById('lookups').value) || 0,
-            notes: document.getElementById('notes').value
-        };
-
-        // Calculate metrics
-        entry.adjustedReadingSpeed = calculateAdjustedReadingSpeed(entry);
-
-        // Calculate improvement
-        if (progressData.length > 0) {
-            const recentEntries = progressData.slice(-7);
-            const avgSpeed = recentEntries.reduce((sum, e) => sum + (e.adjustedReadingSpeed || 0), 0) / recentEntries.length;
-            entry.improvement = ((entry.adjustedReadingSpeed - avgSpeed) / avgSpeed * 100).toFixed(2);
-        }
-
-        // Save to local storage
-        progressData.push(entry);
-        localStorage.setItem('readingProgress', JSON.stringify(progressData));
-        
-        // Update UI
-        updateChart();
-        updateStats();
-        updateHistoryTable();
-        clearForm();
-        
-        showStatus('Session saved successfully!', 'success');
-        
-        // Save to GitHub if configured
-        if (localStorage.getItem('githubToken') && localStorage.getItem('githubRepo')) {
-            saveToGithub(progressData);
-        }
-    } catch (error) {
-        showStatus(error.message, 'error');
-    }
-}
-
-// Add event listeners when the document loads
-document.addEventListener('DOMContentLoaded', function() {
-    // Add button click listeners
-    const githubButton = document.querySelector('button[onclick="saveGithubSettings()"]');
-    if (githubButton) {
-        githubButton.addEventListener('click', saveGithubSettings);
-    }
-
-    const saveButton = document.querySelector('button[onclick="saveProgress()"]');
-    if (saveButton) {
-        saveButton.addEventListener('click', saveProgress);
-    }
-
-    // Initialize the status message div if it doesn't exist
-    if (!document.getElementById('statusMessage')) {
-        const statusDiv = document.createElement('div');
-        statusDiv.id = 'statusMessage';
-        statusDiv.style.display = 'none';
-        document.querySelector('.max-w-7xl').appendChild(statusDiv);
-    }
-});
 
         // Export/Import functions
         function exportData() {

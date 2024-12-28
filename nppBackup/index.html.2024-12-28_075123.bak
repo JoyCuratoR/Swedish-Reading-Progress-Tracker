@@ -42,20 +42,6 @@
             width: 80%;
             max-width: 500px;
         }
-		
-		#statusMessage {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-    display: none;
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-6">
@@ -250,7 +236,6 @@
             <div class="chart-container" style="height: 400px;">
                 <canvas id="progressChart"></canvas>
             </div>
-			
         </div>
     </div>
 
