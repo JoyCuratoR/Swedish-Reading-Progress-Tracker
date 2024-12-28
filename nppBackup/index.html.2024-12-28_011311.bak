@@ -110,7 +110,28 @@
                     </div>
                 </div>
 				
-				
+				<!-- Add Data Management section -->
+		<div class="bg-white rounded-lg shadow-lg p-6">
+			<h3 class="font-semibold mb-4">Session History</h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full table-auto">
+                <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-4 py-2">Date</th>
+						<th class="px-4 py-2">Time (min)</th>
+						<th class="px-4 py-2">Words Read</th>
+						<th class="px-4 py-2">Adjusted Speed</th>
+						<th class="px-4 py-2">Daily Improvement</th>
+						<th class="px-4 py-2">Metrics</th>
+						<th class="px-4 py-2">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <!-- Populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
 				<!-- Edit Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
@@ -166,29 +187,6 @@
                     </div>
                 </div>
             </div>
-			
-			<!-- Add Data Management section -->
-		<div class="bg-white rounded-lg shadow-lg p-6">
-			<h3 class="font-semibold mb-4">Session History</h3>
-        <div class="overflow-x-auto">
-            <table class="min-w-full table-auto">
-                <thead>
-                    <tr class="bg-gray-50">
-                        <th class="px-4 py-2">Date</th>
-						<th class="px-4 py-2">Time (min)</th>
-						<th class="px-4 py-2">Words Read</th>
-						<th class="px-4 py-2">Adjusted Speed</th>
-						<th class="px-4 py-2">Daily Improvement</th>
-						<th class="px-4 py-2">Metrics</th>
-						<th class="px-4 py-2">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="historyTableBody">
-                    <!-- Populated by JavaScript -->
-                </tbody>
-            </table>
-        </div>
-    </div>
 
             <!-- Action Buttons -->
             <div class="flex gap-4 mb-6">
