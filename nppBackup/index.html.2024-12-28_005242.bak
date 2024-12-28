@@ -101,12 +101,6 @@
                                 <option value="other">Other</option>
                             </select>
                         </div>
-			<!-- Add this in your Reading Session section, near the other inputs -->
-			<div>
-				<label class="block text-sm mb-1">Comprehension Score (0-100)</label>
-				<input type="number" id="comprehensionScore" min="0" max="100" 
-				class="w-full p-2 border rounded">
-			</div>
                     </div>
                 </div>
 				
@@ -118,12 +112,13 @@
                 <thead>
                     <tr class="bg-gray-50">
                         <th class="px-4 py-2">Date</th>
-						<th class="px-4 py-2">Time (min)</th>
-						<th class="px-4 py-2">Words Read</th>
+                        <th class="px-4 py-2">Time (min)</th>
+                        <th class="px-4 py-2">Words Read</th>
+                        <th class="px-4 py-2">Reading Speed (wpm)</th>
+                        <th class="px-4 py-2">Daily Improvement</th>
+                        <th class="px-4 py-2">Actions</th>
 						<th class="px-4 py-2">Adjusted Speed</th>
-						<th class="px-4 py-2">Daily Improvement</th>
 						<th class="px-4 py-2">Metrics</th>
-						<th class="px-4 py-2">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="historyTableBody">
@@ -227,6 +222,12 @@
                     <p class="text-sm text-gray-600">Total sessions</p>
                 </div>
             </div>
+			
+			<div>
+				<label class="block text-sm mb-1">Comprehension Score (0-100)</label>
+				<input type="number" id="comprehensionScore" min="0" max="100" 
+				class="w-full p-2 border rounded">
+			</div>
 
             <!-- Progress Chart -->
             <div class="chart-container">
@@ -413,6 +414,48 @@
             document.getElementById('sessionDate').value = new Date().toISOString().slice(0, 16);
         };
 		
+		 // Modify saveProgress function to include words read and date
+        function saveProgress() {
+            const readingTime = parseInt(document.getElementById('readingTime').value);
+            const wordsRead = parseInt(document.getElementById('wordsRead').value);
+            const sessionDate = document.getElementById('sessionDate').value;
+            
+            if (!readingTime || !wordsRead) {
+                showStatus('Please enter both reading time and words read', 'error');
+                return;
+            }
+
+            const entry = {
+                date: sessionDate || new Date().toISOString(),
+                readingTime: readingTime,
+                wordsRead: wordsRead,
+                readingSpeed: Math.round(wordsRead / readingTime), // words per minute
+                textType: document.getElementById('textType').value,
+                newWords: parseInt(document.getElementById('newWords').value) || 0,
+                lookups: parseInt(document.getElementById('lookups').value) || 0,
+                notes: document.getElementById('notes').value
+            };
+
+            // Calculate improvement if there are previous entries
+            if (progressData.length > 0) {
+                const lastEntry = progressData[progressData.length - 1];
+                entry.improvement = calculateImprovement(lastEntry.readingSpeed, entry.readingSpeed);
+            }
+
+            progressData.push(entry);
+            localStorage.setItem('readingProgress', JSON.stringify(progressData));
+            
+            updateChart();
+            updateStats();
+            updateHistoryTable();
+            clearForm();
+            showStatus('Session saved successfully!', 'success');
+			
+			// Save to GitHub if configured
+            if (localStorage.getItem('githubToken')) {
+                saveToGithub(progressData);
+            }
+        }
 
         // Calculate improvement percentage
         function calculateImprovement(previousSpeed, currentSpeed) {
@@ -511,6 +554,7 @@ function calculateLookupPenalty(lookups, totalWords) {
     return Math.min(lookups / totalWords, 0.5); // Max 50% penalty for lookups
 }
 
+// Modify saveProgress to include new metrics
 function saveProgress() {
     const readingTime = parseInt(document.getElementById('readingTime').value);
     const wordsRead = parseInt(document.getElementById('wordsRead').value);
@@ -551,10 +595,6 @@ function saveProgress() {
     updateHistoryTable();
     clearForm();
     showStatus('Session saved successfully!', 'success');
-	
-	// Save to GitHub if configured
-            if (localStorage.getItem('githubToken')) {
-                saveToGithub(progressData);
 }
     </script>
 </body>
