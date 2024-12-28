@@ -111,8 +111,8 @@
                 </div>
 				
 				<!-- Add Data Management section -->
-		<div class="bg-white rounded-lg shadow-lg p-6">
-			<h3 class="font-semibold mb-4">Session History</h3>
+    <div class="mt-6 bg-white rounded-lg shadow p-4">
+        <h3 class="font-semibold mb-4">Session History</h3>
         <div class="overflow-x-auto">
             <table class="min-w-full table-auto">
                 <thead>
@@ -209,7 +209,7 @@
             <div id="statusMessage" class="mb-6 hidden"></div>
 
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div class="bg-blue-50 rounded-lg p-4 text-center">
                     <h3 class="text-lg font-semibold mb-2" id="weeklyTime">0</h3>
                     <p class="text-sm text-gray-600">Minutes this week</p>
@@ -229,9 +229,7 @@
             </div>
 
             <!-- Progress Chart -->
-            <div class="bg-white p-4 rounded-lg shadow mb-6">
-            <h3 class="font-semibold mb-4">Progress Chart</h3>
-            <div class="chart-container" style="height: 400px;">
+            <div class="chart-container">
                 <canvas id="progressChart"></canvas>
             </div>
         </div>
@@ -244,59 +242,35 @@
 
         // Initialize chart
         function initChart() {
-    const ctx = document.getElementById('progressChart').getContext('2d');
-    chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Reading Time (minutes)',
-                data: [],
-                borderColor: 'rgb(59, 130, 246)',
-                backgroundColor: 'rgb(59, 130, 246)',
-                tension: 0.1,
-                pointRadius: 6,  // Larger points
-                pointHoverRadius: 8  // Larger hover points
-            }, {
-                label: 'New Words',
-                data: [],
-                borderColor: 'rgb(16, 185, 129)',
-                backgroundColor: 'rgb(16, 185, 129)',
-                tension: 0.1,
-                pointRadius: 6,  // Larger points
-                pointHoverRadius: 8  // Larger hover points
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Reading Time (minutes)',
+                        data: [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        tension: 0.1
+                    }, {
+                        label: 'New Words',
+                        data: [],
+                        borderColor: 'rgb(16, 185, 129)',
+                        tension: 0.1
+                    }]
                 },
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.1)',
-                    }
-                },
-                x: {
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.1)',
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     }
                 }
-            },
-            elements: {
-                point: {
-                    borderWidth: 2,
-                }
-            }
+            });
+            updateChart();
         }
-    });
-    updateChart();
-}
 
 
         // Update chart
