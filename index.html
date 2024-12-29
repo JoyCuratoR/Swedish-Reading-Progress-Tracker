@@ -50,6 +50,77 @@
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Progress Chart</h2>
             <canvas id="progressChart"></canvas>
         </div>
+		
+		<!-- GitHub Configuration Modal -->
+        <div id="configModal" class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">GitHub Configuration</h2>
+            <form id="configForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">GitHub Username</label>
+                    <input type="text" id="githubUsername" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Repository Name</label>
+                    <input type="text" id="repoName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">GitHub Token</label>
+                    <input type="password" id="githubToken" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                    <p class="mt-1 text-sm text-gray-500">Your token will be stored securely in your browser's session storage.</p>
+                </div>
+                <button type="submit" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                    Save Configuration
+                </button>
+            </form>
+        </div>
+
+        <!-- Input Form (initially hidden) -->
+        <div id="progressSection" class="hidden">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">Track Progress</h2>
+                    <button id="reconfigureBtn" class="text-sm text-indigo-600 hover:text-indigo-800">
+                        Reconfigure GitHub
+                    </button>
+                </div>
+                <form id="progressForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Initial WPM</label>
+                            <input type="number" id="initialWpm" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">CEFR Level</label>
+                            <select id="cefrLevel" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="1">A1</option>
+                                <option value="0.85">A2</option>
+                                <option value="0.7">B1</option>
+                                <option value="0.55">B2</option>
+                                <option value="0.4">C1</option>
+                                <option value="0.25">C2</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Word Recognition (%)</label>
+                            <input type="number" id="wordRecognition" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Context Inference (%)</label>
+                            <input type="number" id="contextInference" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                        Calculate Progress
+                    </button>
+                </form>
+            </div>
+
+            <!-- Results Display -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Progress Chart</h2>
+                <canvas id="progressChart"></canvas>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -173,6 +244,172 @@
                 alert('Failed to save progress data to GitHub');
             }
         }
+		
+		// Store GitHub credentials in session storage
+        const storage = {
+            set: (key, value) => sessionStorage.setItem(key, value),
+            get: (key) => sessionStorage.getItem(key),
+            clear: () => sessionStorage.clear()
+        };
+
+        const configForm = document.getElementById('configForm');
+        const configModal = document.getElementById('configModal');
+        const progressSection = document.getElementById('progressSection');
+        const reconfigureBtn = document.getElementById('reconfigureBtn');
+        let progressChart = null;
+
+        // Check if GitHub configuration exists
+        function checkConfiguration() {
+            const token = storage.get('githubToken');
+            const username = storage.get('githubUsername');
+            const repo = storage.get('repoName');
+
+            if (token && username && repo) {
+                configModal.classList.add('hidden');
+                progressSection.classList.remove('hidden');
+                return true;
+            }
+            configModal.classList.remove('hidden');
+            progressSection.classList.add('hidden');
+            return false;
+        }
+
+        // Handle GitHub configuration
+        configForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('githubUsername').value;
+            const repo = document.getElementById('repoName').value;
+            const token = document.getElementById('githubToken').value;
+
+            storage.set('githubUsername', username);
+            storage.set('repoName', repo);
+            storage.set('githubToken', token);
+
+            checkConfiguration();
+        });
+
+        // Handle reconfigure button
+        reconfigureBtn.addEventListener('click', () => {
+            storage.clear();
+            checkConfiguration();
+        });
+
+        document.getElementById('progressForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const initialWpm = parseFloat(document.getElementById('initialWpm').value);
+            const cefrMultiplier = parseFloat(document.getElementById('cefrLevel').value);
+            const wordRecognition = parseFloat(document.getElementById('wordRecognition').value) / 100;
+            const contextInference = parseFloat(document.getElementById('contextInference').value) / 100;
+            
+            const comprehensionScore = (wordRecognition * 0.7) + (contextInference * 0.3);
+            const data = generateProgressData(initialWpm, cefrMultiplier, comprehensionScore);
+            
+            updateChart(data);
+            await saveToGitHub(data);
+        });
+
+        function generateProgressData(initialWpm, cefrMultiplier, comprehensionScore) {
+            const days = 30;
+            const data = {
+                labels: [],
+                expectedWpm: [],
+                adjustedWpm: []
+            };
+
+            for (let day = 0; day <= days; day++) {
+                data.labels.push(`Day ${day}`);
+                const baseWpm = initialWpm * Math.pow(1.01, day);
+                const adjustedWpm = baseWpm * cefrMultiplier * comprehensionScore;
+                
+                data.expectedWpm.push(Math.round(baseWpm));
+                data.adjustedWpm.push(Math.round(adjustedWpm));
+            }
+
+            return data;
+        }
+
+        function updateChart(data) {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            
+            if (progressChart) {
+                progressChart.destroy();
+            }
+
+            progressChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Expected WPM',
+                            data: data.expectedWpm,
+                            borderColor: 'rgb(99, 102, 241)',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Adjusted WPM (with CEFR & Comprehension)',
+                            data: data.adjustedWpm,
+                            borderColor: 'rgb(239, 68, 68)',
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Swedish Reading Progress'
+                        }
+                    }
+                }
+            });
+        }
+
+        async function saveToGitHub(data) {
+            try {
+                const token = storage.get('githubToken');
+                const username = storage.get('githubUsername');
+                const repo = storage.get('repoName');
+
+                if (!token || !username || !repo) {
+                    throw new Error('GitHub configuration missing');
+                }
+
+                const content = btoa(JSON.stringify(data, null, 2));
+                const timestamp = new Date().toISOString();
+                const path = `progress-data/${timestamp}.json`;
+                
+                const response = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${path}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: `Update progress data - ${timestamp}`,
+                        content: content
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to save to GitHub');
+                }
+                
+                alert('Progress data saved successfully!');
+            } catch (error) {
+                console.error('Error saving to GitHub:', error);
+                alert('Failed to save progress data to GitHub: ' + error.message);
+            }
+        }
+
+        // Check configuration on page load
+        checkConfiguration();
     </script>
 </body>
 </html>
