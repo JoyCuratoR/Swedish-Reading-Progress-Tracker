@@ -56,43 +56,6 @@
     from { opacity: 0; transform: translateY(-20px); }
     to { opacity: 1; transform: translateY(0); }
 }
-
-// Add to your existing CSS
-const style = document.createElement('style');
-style.textContent = `
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-}
-
-.modal-content {
-    background-color: white;
-    margin: 15% auto;
-    padding: 20px;
-    border-radius: 8px;
-    width: 80%;
-    max-width: 500px;
-    position: relative;
-}
-
-.modal button {
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.modal button:hover {
-    opacity: 0.9;
-}
-`;
-document.head.appendChild(style);
-
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-6">
@@ -164,29 +127,30 @@ document.head.appendChild(style);
 				
 				<!-- Edit Modal -->
     <div id="editModal" class="modal">
-    <div class="modal-content">
-        <h3 class="font-semibold mb-4">Edit Session</h3>
-        <input type="hidden" id="editIndex">
-        <div class="space-y-3">
-            <div>
-                <label class="block text-sm mb-1">Date</label>
-                <input type="datetime-local" id="editDate" class="w-full p-2 border rounded">
-            </div>
-            <div>
-                <label class="block text-sm mb-1">Reading Duration (minutes)</label>
-                <input type="number" id="editTime" class="w-full p-2 border rounded">
-            </div>
-            <div>
-                <label class="block text-sm mb-1">Words Read</label>
-                <input type="number" id="editWords" class="w-full p-2 border rounded">
-            </div>
-            <div class="flex justify-end gap-2">
-                <button class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
-                <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save</button>
+        <div class="modal-content">
+            <h3 class="font-semibold mb-4">Edit Session</h3>
+            <input type="hidden" id="editIndex">
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm mb-1">Date</label>
+                    <input type="datetime-local" id="editDate" class="w-full p-2 border rounded">
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Reading Duration (minutes)</label>
+                    <input type="number" id="editTime" class="w-full p-2 border rounded">
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Words Read</label>
+                    <input type="number" id="editWords" class="w-full p-2 border rounded">
+                </div>
+                <!-- Add other fields as needed -->
+                <div class="flex justify-end gap-2">
+                    <button onclick="closeEditModal()" class="bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+                    <button onclick="saveEdit()" class="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 	
                 <!-- Vocabulary Tracking -->
                 <div class="bg-gray-50 rounded-lg p-4">
@@ -447,22 +411,20 @@ function showStatus(message, type = 'success') {
     }
 }
 
-        // Improved save progress function with better validation
-		function saveProgress() {
-		try {
+        // Save GitHub settings
+        function saveProgress() {
+    try {
         const readingTime = parseInt(document.getElementById('readingTime').value);
         const wordsRead = parseInt(document.getElementById('wordsRead').value);
         const sessionDate = document.getElementById('sessionDate').value;
         const comprehensionScore = parseInt(document.getElementById('comprehensionScore').value) || 0;
         
-        // More precise validation
-        if (!readingTime || isNaN(readingTime) || readingTime <= 0) {
-            showStatus('Please enter a valid reading time greater than 0', 'error');
-            return;
+        // Validate required fields
+        if (!readingTime || isNaN(readingTime)) {
+            throw new Error('Please enter a valid reading time');
         }
-        if (!wordsRead || isNaN(wordsRead) || wordsRead <= 0) {
-            showStatus('Please enter a valid word count greater than 0', 'error');
-            return;
+        if (!wordsRead || isNaN(wordsRead)) {
+            throw new Error('Please enter a valid word count');
         }
 
         const entry = {
@@ -478,30 +440,6 @@ function showStatus(message, type = 'success') {
 
         // Calculate metrics
         entry.adjustedReadingSpeed = calculateAdjustedReadingSpeed(entry);
-
-        if (progressData.length > 0) {
-            const recentEntries = progressData.slice(-7);
-            const avgSpeed = recentEntries.reduce((sum, e) => sum + (e.adjustedReadingSpeed || 0), 0) / recentEntries.length;
-            entry.improvement = ((entry.adjustedReadingSpeed - avgSpeed) / avgSpeed * 100).toFixed(2);
-        }
-
-        progressData.push(entry);
-        localStorage.setItem('readingProgress', JSON.stringify(progressData));
-        
-        updateChart();
-        updateStats();
-        updateHistoryTable();
-        clearForm();
-        
-        showStatus('Session saved successfully!', 'success');
-        
-        if (localStorage.getItem('githubToken') && localStorage.getItem('githubRepo')) {
-            saveToGithub(progressData);
-        }
-    } catch (error) {
-        showStatus(error.message, 'error');
-    }
-}
 
         // Calculate improvement
         if (progressData.length > 0) {
@@ -633,51 +571,15 @@ function updateHistoryTable() {
     });
 }
 
-// Add event listeners to edit and delete buttons
-    document.querySelectorAll('.edit-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-            editEntry(parseInt(e.target.dataset.index));
-        });
-    });
-	
-	document.querySelectorAll('.delete-btn').forEach(button => {
-        button.addEventListener('click', (e) => {
-            deleteEntry(parseInt(e.target.dataset.index));
-        });
-    });
-}
-
-        // Fixed edit modal functions
-function editEntry(index) {
-    const entry = progressData[index];
-    document.getElementById('editIndex').value = index;
-    document.getElementById('editDate').value = new Date(entry.date).toISOString().slice(0, 16);
-    document.getElementById('editTime').value = entry.readingTime;
-    document.getElementById('editWords').value = entry.wordsRead;
-    
-    const modal = document.getElementById('editModal');
-    modal.style.display = 'block';
-	
-	// Add click event listener for clicking outside modal
-    modal.onclick = function(event) {
-        if (event.target === modal) {
-            closeEditModal();
+        // Edit entry
+        function editEntry(index) {
+            const entry = progressData[index];
+            document.getElementById('editIndex').value = index;
+            document.getElementById('editDate').value = entry.date.slice(0, 16);
+            document.getElementById('editTime').value = entry.readingTime;
+            document.getElementById('editWords').value = entry.wordsRead;
+            document.getElementById('editModal').style.display = 'block';
         }
-    };
-}
-
-function closeEditModal() {
-    const modal = document.getElementById('editModal');
-    modal.style.display = 'none';
-}
-
-function saveEdit() {
-    const index = parseInt(document.getElementById('editIndex').value);
-    const entry = progressData[index];
-    
-    entry.date = document.getElementById('editDate').value;
-    entry.readingTime = parseInt(document.getElementById('editTime').value);
-    entry.wordsRead = parseInt(document.getElementById('editWords').value);
 		
 	// Constants for standardized texts
 const STANDARDIZED_TEXTS = {
@@ -729,6 +631,28 @@ function calculateLookupPenalty(lookups, totalWords) {
     return Math.min(lookups / totalWords, 0.5); // Max 50% penalty for lookups
 }
 
+function saveProgress() {
+    const readingTime = parseInt(document.getElementById('readingTime').value);
+    const wordsRead = parseInt(document.getElementById('wordsRead').value);
+    const sessionDate = document.getElementById('sessionDate').value;
+    const comprehensionScore = parseInt(document.getElementById('comprehensionScore').value) || 0;
+    
+    if (!readingTime || !wordsRead) {
+        showStatus('Please enter both reading time and words read', 'error');
+        return;
+    }
+
+    const entry = {
+        date: sessionDate || new Date().toISOString(),
+        readingTime: readingTime,
+        wordsRead: wordsRead,
+        textType: document.getElementById('textType').value,
+        comprehensionScore: comprehensionScore,
+        newWords: parseInt(document.getElementById('newWords').value) || 0,
+        lookups: parseInt(document.getElementById('lookups').value) || 0,
+        notes: document.getElementById('notes').value
+    };
+
     // Calculate adjusted reading speed
     entry.adjustedReadingSpeed = calculateAdjustedReadingSpeed(entry);
 
@@ -748,33 +672,6 @@ function calculateLookupPenalty(lookups, totalWords) {
     clearForm();
     showStatus('Session saved successfully!', 'success');
 }
-
-// Add delete functionality
-function deleteEntry(index) {
-    if (confirm('Are you sure you want to delete this entry?')) {
-        progressData.splice(index, 1);
-        localStorage.setItem('readingProgress', JSON.stringify(progressData));
-        updateChart();
-        updateStats();
-        updateHistoryTable();
-        showStatus('Entry deleted successfully!', 'success');
-    }
-}
-
-// Initialize event listeners
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize the modal close button
-    const closeButtons = document.querySelectorAll('button[onclick="closeEditModal()"]');
-    closeButtons.forEach(button => {
-        button.addEventListener('click', closeEditModal);
-    });
-
-    // Initialize the modal save button
-    const saveButtons = document.querySelectorAll('button[onclick="saveEdit()"]');
-    saveButtons.forEach(button => {
-        button.addEventListener('click', saveEdit);
-    });
-});
     </script>
 </body>
 </html>
