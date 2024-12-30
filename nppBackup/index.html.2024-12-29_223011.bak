@@ -103,31 +103,9 @@
 
     var proficiency = calculateReadingProficiency(initialWPM, days, cefr, wordRecognition, contextInference);
 
-    var percentageIncrease = 0;
-    var goalMet = false;
-
-    if (savedData.length > 0) {
-        var previousProficiency = parseFloat(savedData[savedData.length - 1].proficiency);
-        percentageIncrease = calculatePercentageIncrease(previousProficiency, proficiency);
-        goalMet = percentageIncrease >= 1;
-    }
-
-    var resultHTML = '<h2>Results:</h2>' +
+    document.getElementById('result').innerHTML = 
+        '<h2>Results:</h2>' +
         '<p>Total Reading Proficiency: ' + proficiency.toFixed(2) + ' WPM</p>';
-
-    if (savedData.length > 0) {
-        resultHTML += '<p>Percentage Increase: ' + percentageIncrease.toFixed(2) + '%</p>' +
-            '<p>Daily Goal: ' + (goalMet ? 'Met' : 'Not Met') + '</p>';
-    }
-
-    document.getElementById('result').innerHTML = resultHTML;
-
-    // Add data to table and save (rest of the function remains the same)
-    // ...
-}
-
-		
-		
 
     // Add data to table
     var table = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
@@ -212,11 +190,6 @@
     '<td>' + proficiency.toFixed(2) + '</td>';
             });
         }
-		
-		function calculatePercentageIncrease(oldValue, newValue) {
-    return ((newValue - oldValue) / oldValue) * 100;
-}
-
     </script>
 </body>
 </html>

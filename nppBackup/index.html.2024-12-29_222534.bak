@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Improvement Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        #calculator {
+            background-color: #f0f0f0;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        #result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reading Improvement Tracker</h1>
+    <div id="calculator">
+        <label for="initialWPM">Initial WPM:</label>
+        <input type="number" id="initialWPM" min="1" value="100">
+
+        <label for="days">Days of Practice:</label>
+        <input type="number" id="days" min="0" value="0">
+
+        <label for="cefr">CEFR Level:</label>
+        <select id="cefr">
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+            <option value="C1">C1</option>
+            <option value="C2">C2</option>
+        </select>
+
+        <label for="wordRecognition">Word Recognition Accuracy (%):</label>
+        <input type="number" id="wordRecognition" min="0" max="100" value="80">
+
+        <label for="contextInference">Context Inference Accuracy (%):</label>
+        <input type="number" id="contextInference" min="0" max="100" value="90">
+
+        <button onclick="updateResult()">Calculate</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const complexityMultipliers = {
+            'A1': 1.0,
+            'A2': 0.85,
+            'B1': 0.7,
+            'B2': 0.55,
+            'C1': 0.4,
+            'C2': 0.25
+        };
+
+        function calculateReadingProficiency(initialWPM, days, cefr, wordRecognition, contextInference) {
+            const c = complexityMultipliers[cefr];
+            const r = 0.01; // 1% daily improvement
+            const P = initialWPM * Math.pow(1 + r, days) * c;
+            const CS = (wordRecognition * 0.7) + (contextInference * 0.3);
+            return P * CS;
+        }
+
+        function updateResult() {
+            const initialWPM = parseFloat(document.getElementById('initialWPM').value);
+            const days = parseInt(document.getElementById('days').value);
+            const cefr = document.getElementById('cefr').value;
+            const wordRecognition = parseFloat(document.getElementById('wordRecognition').value) / 100;
+            const contextInference = parseFloat(document.getElementById('contextInference').value) / 100;
+
+            const proficiency = calculateReadingProficiency(initialWPM, days, cefr, wordRecognition, contextInference);
+
+            document.getElementById('result').innerHTML = `
+                <h2>Results:</h2>
+                <p>Total Reading Proficiency: ${proficiency.toFixed(2)} WPM</p>
+                `;
+        }
+    </script>
+</body>
+</html>
