@@ -96,7 +96,7 @@
         }
 		
 		.edit-btn {
-			background: #70C1B3;
+			background:
 		}
 		
 		.edit-btn:hover {
@@ -265,13 +265,6 @@
             updateChart();
             saveToLocalStorage();
         }
-		
-		function editEntry(index) {
-			entries.splice(index, 1);
-			updateTable();
-			updateChart();
-			saveToLocalStorage();
-		}
 
         function exportData() {
             const dataStr = JSON.stringify(entries);

@@ -94,14 +94,6 @@
         .delete-btn:hover {
             background: #c82333;
         }
-		
-		.edit-btn {
-			background: #70C1B3;
-		}
-		
-		.edit-btn:hover {
-			background: #c82333;
-		}
     </style>
 </head>
 <body>
@@ -202,16 +194,16 @@
             entries.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach((entry, index) => {
                 const row = tbody.insertRow();
                 row.innerHTML = `
-                    '<td>' + entry.date + '</td>' +
-					'<td>' + entry.wpm + '</td>' +
-					'<td>' + entry.level + '</td>' +
-					'<td>' + entry.wordAccuracy + '%</td>' +
-					'<td>' + entry.contextAccuracy + '%</td>' +
-					'<td>' + entry.totalScore.toFixed(2) + '</td>' +
-					'<td>' +
-                        '<button class="delete-btn" onclick="editEntry(' + index + ')">Edit</button> ' +
-						'<button class="edit-btn" onclick="deleteEntry(' + index + ')">Delete</button>' +
-            '</td>';
+                    <td>${entry.date}</td>
+                    <td>${entry.wpm}</td>
+                    <td>${getLevelLabel(entry.level)}</td>
+                    <td>${entry.wordRecognition}%</td>
+                    <td>${entry.contextInference}%</td>
+                    <td>${calculateFinalScore(entry)}</td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteEntry(${index})">Delete</button>
+                    </td>
+                `;
             });
         }
 
@@ -265,13 +257,6 @@
             updateChart();
             saveToLocalStorage();
         }
-		
-		function editEntry(index) {
-			entries.splice(index, 1);
-			updateTable();
-			updateChart();
-			saveToLocalStorage();
-		}
 
         function exportData() {
             const dataStr = JSON.stringify(entries);

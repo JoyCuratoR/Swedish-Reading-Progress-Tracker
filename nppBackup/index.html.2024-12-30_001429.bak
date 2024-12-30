@@ -94,14 +94,6 @@
         .delete-btn:hover {
             background: #c82333;
         }
-		
-		.edit-btn {
-			background: #70C1B3;
-		}
-		
-		.edit-btn:hover {
-			background: #c82333;
-		}
     </style>
 </head>
 <body>
@@ -209,8 +201,8 @@
 					'<td>' + entry.contextAccuracy + '%</td>' +
 					'<td>' + entry.totalScore.toFixed(2) + '</td>' +
 					'<td>' +
-                        '<button class="delete-btn" onclick="editEntry(' + index + ')">Edit</button> ' +
-						'<button class="edit-btn" onclick="deleteEntry(' + index + ')">Delete</button>' +
+                        '<button onclick="editEntry(' + index + ')">Edit</button> ' +
+						'<button onclick="deleteEntry(' + index + ')">Delete</button>' +
             '</td>';
             });
         }
@@ -265,13 +257,6 @@
             updateChart();
             saveToLocalStorage();
         }
-		
-		function editEntry(index) {
-			entries.splice(index, 1);
-			updateTable();
-			updateChart();
-			saveToLocalStorage();
-		}
 
         function exportData() {
             const dataStr = JSON.stringify(entries);
