@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Improvement Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #calculator {
+            background-color: #f0f0f0;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reading Improvement Tracker</h1>
+    <div id="calculator">
+        <label for="initialWPM">Initial WPM:</label>
+        <input type="number" id="initialWPM" min="1" value="100"><br>
+
+        <label for="days">Days of Practice:</label>
+        <input type="number" id="days" min="0" value="0"><br>
+
+        <label for="cefr">CEFR Level:</label>
+        <select id="cefr">
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+            <option value="C1">C1</option>
+            <option value="C2">C2</option>
+        </select><br>
+
+        <label for="wordRecognition">Word Recognition Accuracy (%):</label>
+        <input type="number" id="wordRecognition" min="0" max="100" value="80"><br>
+
+        <label for="contextInference">Context Inference Accuracy (%):</label>
+        <input type="number" id="contextInference" min="0" max="100" value="90"><br>
+
+        <button onclick="updateResult()">Calculate</button>
+        <button onclick="saveData()">Save Data</button>
+        <button onclick="loadData()">Load Data</button>
+        <input type="file" id="fileInput" style="display: none;" onchange="handleFileUpload(event)">
+
+        <div id="result"></div>
+    </div>
+
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Initial WPM</th>
+                <th>Days</th>
+                <th>CEFR</th>
+                <th>Word Recognition</th>
+                <th>Context Inference</th>
+                <th>Proficiency</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        const complexityMultipliers = {
+            'A1': 1.0, 'A2': 0.85, 'B1': 0.7, 'B2': 0.55, 'C1': 0.4, 'C2': 0.25
+        };
+
+        let savedData = [];
+
+        function calculateReadingProficiency(initialWPM, days, cefr, wordRecognition, contextInference) {
+            const c = complexityMultipliers[cefr];
+            const r = 0.01;
+            const P = initialWPM * Math.pow(1 + r, days) * c;
+            const CS = (wordRecognition * 0.7) + (contextInference * 0.3);
+            return P * CS;
+        }
+
+        function updateResult() {
+    var initialWPM = parseFloat(document.getElementById('initialWPM').value);
+    var days = parseInt(document.getElementById('days').value);
+    var cefr = document.getElementById('cefr').value;
+    var wordRecognition = parseFloat(document.getElementById('wordRecognition').value) / 100;
+    var contextInference = parseFloat(document.getElementById('contextInference').value) / 100;
+
+    var proficiency = calculateReadingProficiency(initialWPM, days, cefr, wordRecognition, contextInference);
+
+    var percentageIncrease = 0;
+    var goalMet = false;
+
+    if (savedData.length > 0) {
+        var previousProficiency = parseFloat(savedData[savedData.length - 1].proficiency);
+        percentageIncrease = calculatePercentageIncrease(previousProficiency, proficiency);
+        goalMet = percentageIncrease >= 1;
+    }
+
+    var resultHTML = '<h2>Results:</h2>' +
+        '<p>Total Reading Proficiency: ' + proficiency.toFixed(2) + ' WPM</p>';
+
+    if (savedData.length > 0) {
+        resultHTML += '<p>Percentage Increase: ' + percentageIncrease.toFixed(2) + '%</p>' +
+            '<p>Daily Goal: ' + (goalMet ? 'Met' : 'Not Met') + '</p>';
+    }
+
+    document.getElementById('result').innerHTML = resultHTML;
+
+    // Add data to table and save (rest of the function remains the same)
+    // ...
+}
+
+		
+		
+
+    // Add data to table
+    var table = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+    var newRow = table.insertRow();
+    newRow.innerHTML = 
+        '<td>' + new Date().toLocaleDateString() + '</td>' +
+        '<td>' + initialWPM + '</td>' +
+        '<td>' + days + '</td>' +
+        '<td>' + cefr + '</td>' +
+        '<td>' + (wordRecognition * 100).toFixed(2) + '%</td>' +
+        '<td>' + (contextInference * 100).toFixed(2) + '%</td>' +
+        '<td>' + proficiency.toFixed(2) + '</td>';
+
+    // Save data
+    savedData.push({
+        date: new Date().toISOString(),
+        initialWPM: initialWPM,
+        days: days,
+        cefr: cefr,
+        wordRecognition: wordRecognition * 100,
+        contextInference: contextInference * 100,
+        proficiency: proficiency.toFixed(2)
+    });
+}
+
+            // Save data
+            savedData.push({
+                date: new Date().toISOString(),
+                initialWPM,
+                days,
+                cefr,
+                wordRecognition: wordRecognition * 100,
+                contextInference: contextInference * 100,
+                proficiency: proficiency.toFixed(2)
+            });
+        }
+
+        function saveData() {
+            const dataStr = JSON.stringify(savedData);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'reading_improvement_data.json';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function loadData() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        savedData = JSON.parse(e.target.result);
+                        updateTable();
+                    } catch (error) {
+                        console.error('Error parsing JSON:', error);
+                        alert('Error loading file. Please make sure it\'s a valid JSON file.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function updateTable() {
+            const table = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+            table.innerHTML = '';
+            savedData.forEach(data => {
+                const newRow = table.insertRow();
+                newRow.innerHTML = 
+    '<td>' + new Date().toLocaleDateString() + '</td>' +
+    '<td>' + initialWPM + '</td>' +
+    '<td>' + days + '</td>' +
+    '<td>' + cefr + '</td>' +
+    '<td>' + (wordRecognition * 100) + '%</td>' +
+    '<td>' + (contextInference * 100) + '%</td>' +
+    '<td>' + proficiency.toFixed(2) + '</td>';
+            });
+        }
+		
+		function calculatePercentageIncrease(oldValue, newValue) {
+    return ((newValue - oldValue) / oldValue) * 100;
+}
+
+    </script>
+</body>
+</html>
