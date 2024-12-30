@@ -1,39 +1,90 @@
 <b>Key features of this language learning reading comprehension progress tracker app:</b>
-- Track Comprehension rate, Reading speed/Word per Minute (WPM), Effective Reading Rate, Level difficulty, and Date
-- Visualize your data with overall progress of Comprehension rate and a detailed look at all three metrics
-- Easily export or import a set of data using .csv file extension
-- And if you accidently make a mistake entering in your data, you can either edit or delete the data point
-- Save your dataset in your own GitHub repository using a Personal Access Token and GitHub Integration
-- Track your Daily progress, Streak count, and get a summary of how many percent you've improved in the last 30 days
+
+- WPM
+- Date
+- Complexity Level (A1, 2, B1, 2, C1, 2, etc.)
+- Word Recognition percentage
+- Context Inference percentage
 
 <br></br>
+<b>What is this app calculating?</b>
 
-<b>Let's break down how to set this up properly in steps:</b>
-1. First, let's create a Personal Access Token (PAT) with repo scope:
+<i>My initial idea</i>
 
-- Go to GitHub.com and log in
-- Click your profile picture → Settings
-- Scroll down to "Developer settings" (left sidebar)
-- Click "Personal access tokens" → "Tokens (classic)"
-- Generate new token → "Generate new token (classic)"
-- Give it a name like "Reading Progress Tracker"
-- Under "Select scopes":
+Statistical Formula for 1% Daily Improvement:
 
-  <i>For a private repository:</i>
+The compound growth formula would be...
 
-  - You would need "repo" scope, but you could create a new GitHub account specifically for this project if you're concerned about security
+P(t) = P₀(1 + r)^t
 
-  <i>For a public repository:</i>
+Where:
 
-  - Just select "public_repo" instead of "repo"
-  - This gives access only to public repositories, which is safer
-- Click "Generate token" and copy the token immediately (you won't see it again)
+P(t) = Reading performance at time t
+P₀ = Initial reading performance (baseline)
+r = Growth rate (0.01 or 1%)
+t = Time in days
 
-2. For the repository:
+For example, if you start at 100 words per minute (WPM):
 
-- Create a new repository on GitHub if you haven't already
-- The repository field should be in the format "yourusername/repositoryname"
-- For example, if your GitHub username is "john" and repository name is "swedish-tracker", you'd enter: "john/swedish-tracker"
+Day 1: 100 × (1.01)¹ = 101 WPM
+Day 2: 100 × (1.01)² = 102.01 WPM
+Day 30: 100 × (1.01)³⁰ = 134.78 WPM
+
+
+Establish a baseline (P₀) by measuring your current reading speed in WPM for Swedish texts of similar difficulty
+Record your actual daily WPM
+Compare your actual progress against the expected compound growth curve
+
+For visualization:
+
+Create a line graph with...
+
+X-axis: Days
+Y-axis: Reading speed (WPM)
+Two lines: Expected progress (using the formula) and actual measurements
+Weekly markers to track longer-term progress
+
+For Text Complexity (CEFR Levels):
+We need to modify our formula to include a complexity factor (c):
+
+P(t,c) = P₀(1 + r)^t × c
+Where:
+
+c = complexity multiplier (example values):
+
+A1 = 1.0 (baseline)
+A2 = 0.85
+B1 = 0.7
+B2 = 0.55
+C1 = 0.4
+C2 = 0.25
+
+
+For Reading Accuracy:
+We need a separate comprehension score (CS) that combines..
+
+Word Recognition Accuracy (WA): % of words correctly understood
+Context Inference Accuracy (CIA): % of meaning correctly inferred
+Total Comprehension Score = (WA × 0.7) + (CIA × 0.3)
+
+The final formula becomes...
+Total Reading Proficiency = P(t,c) × CS
+
+
+Example calculation:
+If you're reading B1 text at 100 WPM with:
+
+Word recognition: 80%
+Context inference: 90%
+CS = (0.8 × 0.7) + (0.9 × 0.3) = 0.83
+Final score = 100(1.01)^t × 0.7 × 0.83
+
+This gives you a more realistic measurement that accounts for:
+
+- Speed improvement over time
+- Text difficulty
+- Word recognition
+- Contextual understanding
 
 <br></br>
 
@@ -67,8 +118,4 @@ For context, many language learners at early stages might read at 40-50 words pe
 
 <br></br>
 
-<b>What's the difference between Words Per Minute (WPM) and Effective Reading Rate (ERR)?</b>
-<b>Words per minute (WPM)</b> is a straightforward metric that measures how many words a person reads in one minute. It is typically used as a simple measure of reading speed. WPM counts the total number of words read, regardless of how well the material is understood or retained. It doesn't account for the comprehension or depth of processing of the text.
-
-<b>Effective reading rate</b> is a more nuanced metric that combines both speed and comprehension. It refers to how efficiently someone reads while maintaining a good level of understanding and retention. It takes into account the quality of reading (comprehension) along with speed. For example, a person may read a passage quickly but if they don’t understand or remember much, their effective reading rate may be lower. Conversely, if someone reads slowly but deeply understands the material, their effective reading rate could still be considered high.
 
