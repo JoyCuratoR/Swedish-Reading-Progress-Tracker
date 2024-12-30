@@ -44,8 +44,7 @@ Y-axis: Reading speed (WPM)
 Two lines: Expected progress (using the formula) and actual measurements
 Weekly markers to track longer-term progress
 
-For Text Complexity (CEFR Levels):
-We need to modify our formula to include a complexity factor (c):
+<b>For Text Complexity (CEFR Levels) modify the formula to include a complexity factor (c):</b>
 
 P(t,c) = P₀(1 + r)^t × c
 Where:
@@ -61,14 +60,15 @@ C2 = 0.25
 
 
 For Reading Accuracy:
-We need a separate comprehension score (CS) that combines..
+
+We need a separate comprehension score (CS) that combines...
 
 Word Recognition Accuracy (WA): % of words correctly understood
 Context Inference Accuracy (CIA): % of meaning correctly inferred
 Total Comprehension Score = (WA × 0.7) + (CIA × 0.3)
 
-The final formula becomes...
-Total Reading Proficiency = P(t,c) × CS
+<b>The final formula becomes...</b>
+```Total Reading Proficiency = P(t,c) × CS```
 
 
 Example calculation:
