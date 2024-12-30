@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- Previous head section and styles remain exactly the same until the script section -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -95,40 +94,14 @@
         .delete-btn:hover {
             background: #c82333;
         }
-
-        .goal-status {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border: 1px solid #dee2e6;
-        }
-
-        .goal-met {
-            color: #28a745;
-            font-weight: bold;
-        }
-
-        .goal-not-met {
-            color: #dc3545;
-            font-weight: bold;
-        }
-
-        .progress-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
-        }
-
-        .above-target {
-            background-color: #28a745;
-        }
-
-        .below-target {
-            background-color: #dc3545;
-        }
+		
+		.edit-btn {
+			background: #70C1B3;
+		}
+		
+		.edit-btn:hover {
+			background: #c82333;
+		}
     </style>
 </head>
 <body>
@@ -172,8 +145,6 @@
             <button onclick="document.getElementById('importFile').click()">Import Data</button>
         </div>
 
-        <div class="goal-status" id="goalStatus"></div>
-
         <table id="dataTable">
             <thead>
                 <tr>
@@ -183,8 +154,6 @@
                     <th>Word Recognition</th>
                     <th>Context Inference</th>
                     <th>Final Score</th>
-                    <th>Target Score</th>
-                    <th>Progress</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -206,14 +175,6 @@
             return (entry.wpm * parseFloat(entry.level) * comprehensionScore).toFixed(2);
         }
 
-        function calculateTargetScore(entry, index) {
-            if (index === 0) return calculateFinalScore(entry);
-            const firstEntry = entries[0];
-            const firstScore = parseFloat(calculateFinalScore(firstEntry));
-            const daysDiff = Math.floor((new Date(entry.date) - new Date(firstEntry.date)) / (1000 * 60 * 60 * 24));
-            return (firstScore * Math.pow(1.01, daysDiff)).toFixed(2);
-        }
-
         function addEntry() {
             const entry = {
                 date: document.getElementById('date').value,
@@ -231,7 +192,6 @@
             entries.push(entry);
             updateTable();
             updateChart();
-            updateGoalStatus();
             saveToLocalStorage();
         }
 
@@ -240,83 +200,18 @@
             tbody.innerHTML = '';
 
             entries.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach((entry, index) => {
-                const actualScore = calculateFinalScore(entry);
-                const targetScore = calculateTargetScore(entry, index);
-                const isAboveTarget = parseFloat(actualScore) >= parseFloat(targetScore);
-                const progressClass = isAboveTarget ? 'above-target' : 'below-target';
-
                 const row = tbody.insertRow();
-                row.innerHTML = 
+                row.innerHTML = `
                     '<td>' + entry.date + '</td>' +
-                    '<td>' + entry.wpm + '</td>' +
-                    '<td>' + getLevelLabel(entry.level) + '</td>' +
-                    '<td>' + entry.wordRecognition + '%</td>' +
-                    '<td>' + entry.contextInference + '%</td>' +
-                    '<td>' + actualScore + '</td>' +
-                    '<td>' + targetScore + '</td>' +
-                    '<td><span class="progress-indicator ' + progressClass + '"></span></td>' +
-                    '<td><button class="delete-btn" onclick="deleteEntry(' + index + ')">Delete</button></td>';
-            });
-        }
-
-        function updateGoalStatus() {
-            if (entries.length < 2) return;
-
-            const sortedEntries = entries.sort((a, b) => new Date(a.date) - new Date(b.date));
-            const latestEntry = sortedEntries[sortedEntries.length - 1];
-            const latestScore = parseFloat(calculateFinalScore(latestEntry));
-            const latestTarget = parseFloat(calculateTargetScore(latestEntry, sortedEntries.length - 1));
-            const percentDiff = ((latestScore - latestTarget) / latestTarget * 100).toFixed(1);
-            
-            const goalStatusDiv = document.getElementById('goalStatus');
-            goalStatusDiv.innerHTML = 
-                '<h3>Goal Progress</h3>' +
-                '<p>Latest Score: ' + latestScore + '</p>' +
-                '<p>Target Score: ' + latestTarget + '</p>' +
-                '<p class="' + (latestScore >= latestTarget ? 'goal-met' : 'goal-not-met') + '">' +
-                'You are ' + Math.abs(percentDiff) + '% ' + (latestScore >= latestTarget ? 'above' : 'below') + ' your target' +
-                '</p>';
-        }
-
-        function updateChart() {
-            const ctx = document.getElementById('progressChart').getContext('2d');
-            
-            if (chart) {
-                chart.destroy();
-            }
-
-            const sortedEntries = entries.sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: sortedEntries.map(function(e) { return e.date; }),
-                    datasets: [{
-                        label: 'Actual Score',
-                        data: sortedEntries.map(function(e) { return calculateFinalScore(e); }),
-                        borderColor: '#0066cc',
-                        tension: 0.1,
-                        pointRadius: 6,
-                        pointHoverRadius: 8
-                    },
-                    {
-                        label: 'Target Score (1% Daily Growth)',
-                        data: sortedEntries.map(function(e, i) { return calculateTargetScore(e, i); }),
-                        borderColor: '#28a745',
-                        borderDash: [5, 5],
-                        tension: 0.1,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
+					'<td>' + entry.wpm + '</td>' +
+					'<td>' + entry.level + '</td>' +
+					'<td>' + entry.wordAccuracy + '%</td>' +
+					'<td>' + entry.contextAccuracy + '%</td>' +
+					'<td>' + entry.totalScore.toFixed(2) + '</td>' +
+					'<td>' +
+                        '<button class="delete-btn" onclick="editEntry(' + index + ')">Edit</button> ' +
+						'<button class="edit-btn" onclick="deleteEntry(' + index + ')">Delete</button>' +
+            '</td>';
             });
         }
 
@@ -332,13 +227,51 @@
             return levels[value];
         }
 
+        function updateChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
+
+            const sortedEntries = entries.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedEntries.map(e => e.date),
+                    datasets: [{
+                        label: 'Final Score',
+                        data: sortedEntries.map(e => calculateFinalScore(e)),
+                        borderColor: '#0066cc',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
         function deleteEntry(index) {
             entries.splice(index, 1);
             updateTable();
             updateChart();
-            updateGoalStatus();
             saveToLocalStorage();
         }
+		
+		function editEntry(index) {
+			entries.splice(index, 1);
+			updateTable();
+			updateChart();
+			saveToLocalStorage();
+		}
 
         function exportData() {
             const dataStr = JSON.stringify(entries);
@@ -360,7 +293,6 @@
                     entries = JSON.parse(e.target.result);
                     updateTable();
                     updateChart();
-                    updateGoalStatus();
                     saveToLocalStorage();
                 } catch (error) {
                     alert('Error importing file: Invalid format');
@@ -380,7 +312,6 @@
                 entries = JSON.parse(saved);
                 updateTable();
                 updateChart();
-                updateGoalStatus();
             }
         }
 
