@@ -9,9 +9,7 @@
 <br></br>
 <h2>What is this app calculating?</h2>
 
-<i>My initial idea</i>
-
-Statistical Formula for 1% Daily Improvement:
+My initial idea for a Statistical Formula for 1% Daily Improvement:
 
 The compound growth formula would be...
 
@@ -90,7 +88,7 @@ This gives you a more realistic measurement that accounts for:
 
 <br></br>
 
-<b>Let me explain how to calculate reading comprehension rate. Here's a practical approach:</b>
+<h2>Let me explain how to calculate reading comprehension rate. Here's a practical approach:</h2>
 
 1. Basic Reading Speed (Words Per Minute):
 ```
