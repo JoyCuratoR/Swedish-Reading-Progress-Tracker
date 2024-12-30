@@ -1,4 +1,4 @@
-<b>Key features of this language learning reading comprehension progress tracker app:</b>
+<h2>Key features of this language learning reading comprehension progress tracker app:</h2>
 
 - WPM
 - Date
@@ -7,7 +7,7 @@
 - Context Inference percentage
 
 <br></br>
-<b>What is this app calculating?</b>
+<h2>What is this app calculating?</h2>
 
 <i>My initial idea</i>
 
@@ -44,7 +44,7 @@ Y-axis: Reading speed (WPM)
 Two lines: Expected progress (using the formula) and actual measurements
 Weekly markers to track longer-term progress
 
-<b>For Text Complexity (CEFR Levels) modify the formula to include a complexity factor (c):</b>
+<h2>For Text Complexity (CEFR Levels) modify the formula to include a complexity factor (c):</h2>
 
 P(t,c) = P₀(1 + r)^t × c
 Where:
@@ -68,11 +68,13 @@ Context Inference Accuracy (CIA): % of meaning correctly inferred
 Total Comprehension Score = (WA × 0.7) + (CIA × 0.3)
 
 <b>The final formula becomes...</b>
+
 ```Total Reading Proficiency = P(t,c) × CS```
 
 
 Example calculation:
-If you're reading B1 text at 100 WPM with:
+
+If you're reading B1 text at 100 WPM with...
 
 Word recognition: 80%
 Context inference: 90%
