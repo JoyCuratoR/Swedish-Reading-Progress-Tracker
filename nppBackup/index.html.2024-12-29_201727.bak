@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swedish Progress Tracker</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Alert System -->
+    <div id="alert-container" class="fixed top-4 right-4 z-50">
+        <div id="success-alert" class="hidden bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4" role="alert">
+            <p class="font-bold">Success</p>
+            <p id="success-message"></p>
+        </div>
+        <div id="error-alert" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
+            <p class="font-bold">Error</p>
+            <p id="error-message"></p>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8">Swedish Progress Tracker</h1>
+        
+        <!-- GitHub Configuration Section -->
+        <div id="configSection" class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">GitHub Configuration</h2>
+            <form id="configForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">GitHub Token</label>
+                    <input type="password" id="github-token" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Repository (format: username/repo)</label>
+                    <input type="text" id="github-repo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">
+                    Save Configuration
+                </button>
+            </form>
+        </div>
+
+        <!-- Progress Input Section -->
+        <div id="progressSection" class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">Track Progress</h2>
+                <div class="space-x-2">
+                    <button onclick="importData()" class="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">
+                        Import CSV
+                    </button>
+                    <button onclick="exportData()" class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
+                        Export CSV
+                    </button>
+                </div>
+            </div>
+            <form id="progressForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Date</label>
+                        <input type="date" id="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Initial WPM</label>
+                        <input type="number" id="wpm" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">CEFR Level</label>
+                        <select id="cefrLevel" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="1">A1</option>
+                            <option value="0.85">A2</option>
+                            <option value="0.7">B1</option>
+                            <option value="0.55">B2</option>
+                            <option value="0.4">C1</option>
+                            <option value="0.25">C2</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Comprehension (%)</label>
+                        <input type="number" id="comprehension" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                    </div>
+                </div>
+                <button type="submit" id="submitBtn" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">
+                    Add Progress
+                </button>
+            </form>
+        </div>
+
+        <!-- Progress Chart -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Progress Chart</h2>
+            <canvas id="progressChart"></canvas>
+        </div>
+
+        <!-- Data Table -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Progress History</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">WPM</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CEFR</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comprehension</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="progressTable" class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input for CSV import -->
+    <input type="file" id="fileInput" accept=".csv" style="display: none" onchange="handleFileSelect(event)">
+
+    <script>
+        // Initialize progress data structure
+        let progressData = {
+            dates: [],
+            wpm: [],
+            cefrLevel: [],
+            comprehension: []
+        };
+        
+        let editingIndex = -1;
+        let progressChart = null;
+
+        // Alert system functions
+        function showAlert(message, type) {
+            const alertElement = document.getElementById(type + '-alert');
+            const messageElement = document.getElementById(type + '-message');
+            messageElement.textContent = message;
+            alertElement.classList.remove('hidden');
+            setTimeout(() => alertElement.classList.add('hidden'), 3000);
+        }
+
+        // Initialize on page load
+        window.onload = function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+            
+            // Load GitHub settings if they exist
+            const token = localStorage.getItem('github-token');
+            const repo = localStorage.getItem('github-repo');
+            if (token && repo) {
+                document.getElementById('github-token').value = token;
+                document.getElementById('github-repo').value = repo;
+                loadFromGitHub();
+            }
+            
+            initChart();
+        };
+
+        // Chart initialization
+        function initChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            progressChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Adjusted WPM',
+                        data: [],
+                        borderColor: 'rgb(99, 102, 241)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Swedish Reading Progress'
+                        }
+                    }
+                }
+            });
+        }
+
+        // GitHub Integration
+        document.getElementById('configForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const token = document.getElementById('github-token').value;
+            const repo = document.getElementById('github-repo').value;
+            
+            localStorage.setItem('github-token', token);
+            localStorage.setItem('github-repo', repo);
+            
+            try {
+                await loadFromGitHub();
+                showAlert('GitHub configuration saved successfully!', 'success');
+            } catch (error) {
+                showAlert(error.message, 'error');
+            }
+        });
+
+        async function saveToGitHub() {
+            const token = localStorage.getItem('github-token');
+            const repo = localStorage.getItem('github-repo');
+            
+            if (!token || !repo) {
+                throw new Error('GitHub settings not configured');
+            }
+
+            const content = btoa(JSON.stringify(progressData, null, 2));
+            const apiUrl = `https://api.github.com/repos/${repo}/contents/reading_progress.json`;
+
+            try {
+                // Check if file exists
+                const response = await fetch(apiUrl, {
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (response.status === 200) {
+                    const data = await response.json();
+                    // Update existing file
+                    await fetch(apiUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: 'Update reading progress data',
+                            content: content,
+                            sha: data.sha
+                        })
+                    });
+                } else {
+                    // Create new file
+                    await fetch(apiUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: 'Create reading progress data',
+                            content: content
+                        })
+                    });
+                }
+                showAlert('Data saved to GitHub successfully!', 'success');
+            } catch (error) {
+                showAlert('Failed to save to GitHub: ' + error.message, 'error');
+            }
+        }
+
+        async function loadFromGitHub() {
+            const token = localStorage.getItem('github-token');
+            const repo = localStorage.getItem('github-repo');
+            
+            if (!token || !repo) return;
+
+            const apiUrl = `https://api.github.com/repos/${repo}/contents/reading_progress.json`;
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (response.status === 200) {
+                    const data = await response.json();
+                    progressData = JSON.parse(atob(data.content));
+                    updateChart();
+                    updateTable();
+                    showAlert('Data loaded from GitHub successfully!', 'success');
+                }
+            } catch (error) {
+                showAlert('Failed to load from GitHub: ' + error.message, 'error');
+            }
+        }
+
+        // Form submission handling
+        document.getElementById('progressForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const date = document.getElementById('date').value;
+            const wpm = parseFloat(document.getElementById('wpm').value);
+            const cefrLevel = document.getElementById('cefrLevel').value;
+            const comprehension = parseFloat(document.getElementById('comprehension').value);
+
+            if (editingIndex === -1) {
+                // Add new data point
+                progressData.dates.push(date);
+                progressData.wpm.push(wpm);
+                progressData.cefrLevel.push(cefrLevel);
+                progressData.comprehension.push(comprehension);
+            } else {
+                // Update existing data point
+                progressData.dates[editingIndex] = date;
+                progressData.wpm[editingIndex] = wpm;
+                progressData.cefrLevel[editingIndex] = cefrLevel;
+                progressData.comprehension[editingIndex] = comprehension;
+                editingIndex = -1;
+                document.getElementById('submitBtn').textContent = 'Add Progress';
+            }
+
+            updateChart();
+            updateTable();
+            await saveToGitHub();
+            this.reset();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+        });
+
+        // CSV Import/Export functions
+        function exportData() {
+            let csv = 'Date,WPM,CEFR Level,Comprehension\n';
+            for (let i = 0; i < progressData.dates.length; i++) {
+                csv += `${progressData.dates[i]},${progressData.wpm[i]},${progressData.cefrLevel[i]},${progressData.comprehension[i]}\n`;
+            }
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'swedish_reading_progress.csv');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function importData() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                
+                // Clear existing data
+                progressData = {
+                    dates: [],
+                    wpm: [],
+                    cefrLevel: [],
+                    comprehension: []
+                };
+
+                // Skip header row
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i].trim() === '') continue;
+                    
+                    const [date, comprehension, wpm, complexity] = lines[i].split(',');
+                    progressData.dates.push(date);
+                    progressData.comprehension.push(parseFloat(comprehension));
+                    progressData.wpm.push(parseInt(wpm));
+                    progressData.complexity.push(parseFloat(complexity));
+                }
+                
+                updateChart();
+                updateDataTable();
+            };
+            
+            reader.readAsText(file);
+        }
+		
+</script>
