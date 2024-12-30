@@ -203,6 +203,29 @@
         }
 
         // GitHub Integration
+        async function saveGitHubSettings(e) {
+            e.preventDefault();
+            const token = document.getElementById('github-token').value;
+            const repo = document.getElementById('github-repo').value;
+            
+            if (!token || !repo) {
+                showAlert('Please enter both GitHub token and repository details', 'error');
+                return;
+            }
+
+            localStorage.setItem('github-token', token);
+            localStorage.setItem('github-repo', repo);
+
+            try {
+                await loadFromGitHub(); // Test the connection
+                showAlert('Settings saved and connected successfully!', 'success');
+                checkConfiguration();
+            } catch (error) {
+                showAlert('Error connecting to GitHub: ' + error.message, 'error');
+                localStorage.removeItem('github-token');
+                localStorage.removeItem('github-repo');
+            }
+        }
 
         async function saveToGitHub(newData) {
         const token = localStorage.getItem('github-token');
