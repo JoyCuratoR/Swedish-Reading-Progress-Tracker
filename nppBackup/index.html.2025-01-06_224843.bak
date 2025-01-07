@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily 1% Improvement Calculator and Progress Tracker for Foreign Language Reading</title>
+    <title>Language Learning 1% Daily Reading Improvement Progress Tracker</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <style>
         body {
@@ -133,7 +133,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Daily 1% Improvement Calculator and Progress Tracker for Foreign Language Reading</h1>
+        <h1>Language Learning 1% Daily Reading Improvement Progress Tracker</h1>
         
         <div class="input-group">
             <div class="input-field">
